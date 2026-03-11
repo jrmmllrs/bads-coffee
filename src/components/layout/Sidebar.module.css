@@ -1,0 +1,162 @@
+/* components/layout/Sidebar.module.css */
+
+/* ── Desktop sidebar ── */
+.sidebar {
+  width:          72px;
+  background:     #fff;
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  padding:        16px 0 16px;
+  flex-shrink:    0;
+  border-right:   1px solid #e8eaed;
+  z-index:        10;
+  box-shadow:     1px 0 0 #f0f1f3;
+}
+
+/* ── Logo ── */
+.logo {
+  margin-bottom: 24px;
+  user-select:   none;
+}
+
+.logoIcon {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           40px;
+  height:          40px;
+  background:      #e8521a;
+  border-radius:   10px;
+  font-size:       20px;
+  box-shadow:      0 4px 10px rgba(232,82,26,0.35);
+}
+
+/* ── Nav ── */
+.nav {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            2px;
+  width:          100%;
+  padding:        0 10px;
+}
+
+.navBtn {
+  width:           52px;
+  height:          54px;
+  border-radius:   12px;
+  border:          none;
+  background:      transparent;
+  color:           #9ca3af;
+  cursor:          pointer;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             3px;
+  transition:      background 0.15s, color 0.15s;
+  position:        relative;
+}
+.navBtn:hover {
+  background: #f8f9fb;
+  color:      #374151;
+}
+
+.navBtnActive {
+  background: #fff1ee !important;
+  color:      #e8521a !important;
+}
+
+.activePill {
+  position:      absolute;
+  left:          -10px;
+  top:           50%;
+  transform:     translateY(-50%);
+  width:         3px;
+  height:        24px;
+  background:    #e8521a;
+  border-radius: 0 3px 3px 0;
+}
+
+.navIcon  {
+  font-size:   20px;
+  line-height: 1;
+}
+
+.navLabel {
+  font-size:      9px;
+  font-family:    'DM Sans', 'Segoe UI', sans-serif;
+  font-weight:    600;
+  letter-spacing: 0.2px;
+  line-height:    1;
+}
+
+/* ── Spacer + avatar ── */
+.spacer { flex: 1; }
+
+.avatarWrap {
+  margin-top: 8px;
+  cursor:     pointer;
+}
+
+.avatar {
+  width:           36px;
+  height:          36px;
+  border-radius:   50%;
+  background:      #f3f4f6;
+  border:          2px solid #e8eaed;
+  color:           #6b7280;
+  font-family:     'DM Sans', 'Segoe UI', sans-serif;
+  font-size:       14px;
+  font-weight:     700;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  transition:      border-color 0.15s;
+}
+.avatar:hover { border-color: #e8521a; color: #e8521a; }
+
+/* ── Mobile bottom bar ── */
+.mobileBar { display: none; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+
+  .mobileBar {
+    display:         flex;
+    position:        fixed;
+    bottom:          0;
+    left:            0;
+    right:           0;
+    background:      #fff;
+    border-top:      1px solid #e8eaed;
+    z-index:         100;
+    padding:         6px 0 max(6px, env(safe-area-inset-bottom));
+    box-shadow:      0 -2px 12px rgba(0,0,0,0.07);
+  }
+
+  .mobileBtn {
+    flex:            1;
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    gap:             3px;
+    padding:         6px 4px;
+    border:          none;
+    background:      transparent;
+    color:           #9ca3af;
+    cursor:          pointer;
+    transition:      color 0.15s;
+  }
+
+  .mobileBtnActive { color: #e8521a; }
+
+  .mobileIcon  { font-size: 20px; }
+  .mobileLabel {
+    font-size:   9px;
+    font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    font-weight: 600;
+  }
+}

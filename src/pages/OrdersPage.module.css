@@ -1,0 +1,299 @@
+/* pages/OrdersPage.module.css — light theme matching OrderZ POS */
+
+/* ── Header ── */
+.header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  flex-wrap:       wrap;
+  gap:             12px;
+}
+
+.title {
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size:   22px;
+  font-weight: 700;
+  color:       #111827;
+}
+
+.subtitle {
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size:   13px;
+  color:       #9ca3af;
+  margin-top:  3px;
+}
+
+.headerActions {
+  display:  flex;
+  gap:      8px;
+  flex-wrap: wrap;
+}
+
+/* ── Stats row ── */
+.statsRow {
+  display:   flex;
+  gap:       12px;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  flex:           1;
+  min-width:      130px;
+  background:     #fff;
+  border:         1px solid #e8eaed;
+  border-radius:  12px;
+  padding:        14px 18px;
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+  box-shadow:     0 1px 3px rgba(0,0,0,0.05);
+}
+
+.statLabel {
+  font-family:    'DM Sans', 'Segoe UI', sans-serif;
+  font-size:      11px;
+  font-weight:    700;
+  color:          #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.statValue {
+  font-family: 'DM Mono', monospace;
+  font-size:   22px;
+  font-weight: 800;
+  color:       #111827;
+  line-height: 1.1;
+}
+
+.statAccent { color: #e8521a; }
+
+.statSlash {
+  color:       #d1d5db;
+  font-weight: 400;
+}
+
+/* ── Filters ── */
+.filters {
+  display:     flex;
+  gap:         10px;
+  flex-wrap:   wrap;
+  align-items: center;
+}
+
+.filterGroup {
+  display:       flex;
+  border:        1px solid #e0e3e8;
+  border-radius: 8px;
+  overflow:      hidden;
+  background:    #fff;
+}
+
+.filterBtn {
+  padding:     8px 16px;
+  border:      none;
+  background:  transparent;
+  color:       #6b7280;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size:   13px;
+  font-weight: 500;
+  cursor:      pointer;
+  transition:  background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.filterBtn + .filterBtn { border-left: 1px solid #e0e3e8; }
+.filterBtn:hover        { background: #f8f9fb; color: #111827; }
+
+.filterActive {
+  background:  #e8521a !important;
+  color:       #fff !important;
+  font-weight: 700 !important;
+}
+
+/* ── Order list ── */
+.list {
+  display:        flex;
+  flex-direction: column;
+  gap:            10px;
+}
+
+/* ── Order card ── */
+.card {
+  background:    #fff;
+  border:        1px solid #e8eaed;
+  border-radius: 12px;
+  overflow:      hidden;
+  box-shadow:    0 1px 3px rgba(0,0,0,0.05);
+  transition:    border-color 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  border-color: #f4c4b0;
+  box-shadow:   0 3px 10px rgba(232,82,26,0.08);
+}
+
+.cardRow {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  padding:     14px 18px;
+  cursor:      pointer;
+  user-select: none;
+}
+
+.payIcon {
+  width:           38px;
+  height:          38px;
+  border-radius:   10px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       18px;
+  flex-shrink:     0;
+}
+
+.cardMeta {
+  flex:           1;
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+  min-width:      0;
+}
+
+.cardId {
+  font-family: 'DM Mono', monospace;
+  font-size:   13.5px;
+  font-weight: 700;
+  color:       #111827;
+}
+
+.cardDate {
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size:   11.5px;
+  color:       #9ca3af;
+}
+
+.cardItems {
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size:   12px;
+  color:       #9ca3af;
+  flex-shrink: 0;
+}
+
+.cardTotal {
+  font-family: 'DM Mono', monospace;
+  font-size:   16px;
+  font-weight: 800;
+  color:       #e8521a;
+  flex-shrink: 0;
+}
+
+.chevron {
+  color:      #d1d5db;
+  font-size:  12px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.chevronOpen { transform: rotate(180deg); }
+
+/* ── Expanded detail ── */
+.detail {
+  border-top: 1px solid #f3f4f6;
+  padding:    0 18px 16px;
+  animation:  slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.detailInner {
+  background:    #f9fafb;
+  border:        1px solid #e8eaed;
+  border-radius: 10px;
+  padding:       14px;
+  margin-top:    12px;
+}
+
+.itemList {
+  display:        flex;
+  flex-direction: column;
+  gap:            8px;
+  margin-bottom:  12px;
+}
+
+.itemRow {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+}
+
+.itemName {
+  flex:        1;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size:   13px;
+  color:       #4b5563;
+}
+
+.itemQty {
+  font-family:   'DM Mono', monospace;
+  font-size:     12px;
+  color:         #9ca3af;
+  background:    #e8eaed;
+  padding:       2px 7px;
+  border-radius: 20px;
+}
+
+.itemTotal {
+  font-family: 'DM Mono', monospace;
+  font-size:   13px;
+  font-weight: 600;
+  color:       #374151;
+}
+
+.subtotals {
+  border-top:     1px dashed #e0e3e8;
+  padding-top:    10px;
+  display:        flex;
+  flex-direction: column;
+  gap:            5px;
+  margin-bottom:  12px;
+}
+
+.subtotalRow {
+  display:         flex;
+  justify-content: space-between;
+  font-family:     'DM Sans', 'Segoe UI', sans-serif;
+  font-size:       12.5px;
+  color:           #6b7280;
+}
+
+.grandTotal {
+  font-family: 'DM Mono', monospace !important;
+  font-size:   15px !important;
+  font-weight: 800 !important;
+  color:       #111827 !important;
+  padding-top: 8px;
+  margin-top:  4px;
+  border-top:  1px solid #e0e3e8;
+}
+
+.detailActions {
+  display:         flex;
+  justify-content: flex-end;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .statsRow  { gap: 8px; }
+  .statCard  { min-width: 100px; padding: 12px 14px; }
+  .statValue { font-size: 18px; }
+  .cardRow   { gap: 8px; padding: 12px 14px; }
+  .cardTotal { font-size: 14px; }
+  .cardItems { display: none; }
+}
+
+@media (max-width: 400px) {
+  .filters     { flex-direction: column; align-items: stretch; }
+  .filterGroup { justify-content: center; }
+}

@@ -1,0 +1,66 @@
+/* components/ui/Modal.module.css */
+
+.backdrop {
+  position:        fixed;
+  inset:           0;
+  background:      rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  z-index:         1000;
+  padding:         16px;
+}
+
+.dialog {
+  background:    var(--bg-elevated);
+  border:        1px solid var(--border-hover);
+  border-radius: var(--radius-xl);
+  width:         100%;
+  box-shadow:    var(--shadow-lg);
+  max-height:    90vh;
+  overflow:      hidden;
+  display:       flex;
+  flex-direction: column;
+}
+
+.header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         22px 24px 18px;
+  border-bottom:   1px solid var(--border);
+  flex-shrink:     0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size:   20px;
+  color:       var(--text-primary);
+}
+
+.closeBtn {
+  width:         32px;
+  height:        32px;
+  border-radius: var(--radius-sm);
+  border:        none;
+  background:    rgba(255, 255, 255, 0.06);
+  color:         var(--text-secondary);
+  font-size:     14px;
+  cursor:        pointer;
+  transition:    var(--transition-fast);
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  flex-shrink:   0;
+}
+.closeBtn:hover {
+  background: var(--red-bg);
+  color:      var(--red);
+}
+
+.body {
+  padding:    24px;
+  overflow-y: auto;
+  flex:       1;
+}
