@@ -14,7 +14,7 @@
  */
 
 import { useRef } from "react";
-import styles from "../ui/ImageUpload.module.css";
+import styles from "./ImageUpload.module.css";
 
 const ImageUpload = ({
   value,
