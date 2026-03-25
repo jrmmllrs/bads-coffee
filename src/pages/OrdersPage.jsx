@@ -1,6 +1,7 @@
 /**
  * pages/OrdersPage.jsx
- * Order history with expand/collapse, filters, delete, export.
+ * Order history with Complete / Pending status, expand/collapse,
+ * filters, delete, export, and mark-complete action.
  */
 
 import { useState } from "react";
@@ -16,33 +17,40 @@ import {
 } from "../utils/formatters";
 import styles from "./OrdersPage.module.css";
 
-const PAY_FILTERS  = ["All", "Cash", "Wallet"];
+const PAY_FILTERS  = ["All", "Cash", "E Wallet"];
 const DATE_FILTERS = [
-  ["all",   "All Time"  ],
-  ["today", "Today"     ],
-  ["week",  "This Week" ],
+  ["all",   "All Time" ],
+  ["today", "Today"    ],
+  ["week",  "This Week"],
 ];
+const STATUS_FILTERS = ["All", "Complete", "Pending"];
 
 export default function OrdersPage() {
-  const { orders, deleteOrder, clearAllOrders } = useApp();
+  const { orders, deleteOrder, clearAllOrders, updateOrderStatus } = useApp();
 
-  const [payFilter,    setPayFilter]    = useState("All");
-  const [dateFilter,   setDateFilter]   = useState("all");
-  const [expandedId,   setExpandedId]   = useState(null);
-  const [showClearDlg, setShowClearDlg] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [payFilter,      setPayFilter]      = useState("All");
+  const [dateFilter,     setDateFilter]     = useState("all");
+  const [statusFilter,   setStatusFilter]   = useState("All");
+  const [expandedId,     setExpandedId]     = useState(null);
+  const [showClearDlg,   setShowClearDlg]   = useState(false);
+  const [deleteTarget,   setDeleteTarget]   = useState(null);
+  const [completeTarget, setCompleteTarget] = useState(null);
 
   const filtered = orders.filter((o) => {
-    const matchPay  = payFilter === "All" || o.paymentMethod === payFilter;
-    const matchDate =
+    const matchPay    = payFilter === "All" || o.paymentMethod === payFilter;
+    const matchDate   =
       dateFilter === "today" ? isToday(o.timestamp)
       : dateFilter === "week" ? isWithinDays(o.timestamp, 7)
       : true;
-    return matchPay && matchDate;
+    const matchStatus =
+      statusFilter === "All" || (o.status ?? "Complete") === statusFilter;
+    return matchPay && matchDate && matchStatus;
   });
 
-  const totalRevenue = filtered.reduce((s, o) => s + o.total, 0);
-  const avgOrder     = filtered.length ? totalRevenue / filtered.length : 0;
+  const totalRevenue  = filtered.reduce((s, o) => s + o.total, 0);
+  const avgOrder      = filtered.length ? totalRevenue / filtered.length : 0;
+  const pendingCount  = orders.filter((o) => (o.status ?? "Complete") === "Pending").length;
+  const completeCount = orders.filter((o) => (o.status ?? "Complete") === "Complete").length;
 
   const exportJSON = () => {
     const a = document.createElement("a");
@@ -61,7 +69,8 @@ export default function OrdersPage() {
         <div>
           <h2 className={styles.title}>Order History</h2>
           <p className={styles.subtitle}>
-            {filtered.length} order{filtered.length !== 1 ? "s" : ""} · ₱{totalRevenue.toFixed(2)} revenue
+            {filtered.length} order{filtered.length !== 1 ? "s" : ""}
+            {" · "}₱{totalRevenue.toFixed(2)} revenue
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -78,24 +87,40 @@ export default function OrdersPage() {
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Total Revenue</span>
-          <span className={`${styles.statValue} ${styles.statAccent}`}>₱{totalRevenue.toFixed(2)}</span>
+          <span className={`${styles.statValue} ${styles.statAccent}`}>
+            ₱{totalRevenue.toFixed(2)}
+          </span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Average Order</span>
           <span className={styles.statValue}>₱{avgOrder.toFixed(2)}</span>
         </div>
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Cash / Wallet</span>
+          <span className={styles.statLabel}>Cash / E Wallet</span>
           <span className={styles.statValue}>
             {orders.filter((o) => o.paymentMethod === "Cash").length}
             <span className={styles.statSlash}> / </span>
             {orders.filter((o) => o.paymentMethod !== "Cash").length}
           </span>
         </div>
+        {/* NEW — status split */}
+        <div className={`${styles.statCard} ${styles.statCardComplete}`}>
+          <span className={styles.statLabel}>Completed</span>
+          <span className={`${styles.statValue} ${styles.statComplete}`}>
+            {completeCount}
+          </span>
+        </div>
+        <div className={`${styles.statCard} ${styles.statCardPending}`}>
+          <span className={styles.statLabel}>Pending</span>
+          <span className={`${styles.statValue} ${styles.statPending}`}>
+            {pendingCount}
+          </span>
+        </div>
       </div>
 
       {/* ── Filters ── */}
       <div className={styles.filters}>
+        {/* Payment */}
         <div className={styles.filterGroup}>
           {PAY_FILTERS.map((f) => (
             <button
@@ -107,6 +132,8 @@ export default function OrdersPage() {
             </button>
           ))}
         </div>
+
+        {/* Date */}
         <div className={styles.filterGroup}>
           {DATE_FILTERS.map(([v, l]) => (
             <button
@@ -118,7 +145,37 @@ export default function OrdersPage() {
             </button>
           ))}
         </div>
+
+        {/* Status — NEW */}
+        <div className={styles.filterGroup}>
+          {STATUS_FILTERS.map((f) => (
+            <button
+              key={f}
+              className={`
+                ${styles.filterBtn}
+                ${statusFilter === f ? styles.filterActive : ""}
+                ${f === "Complete" && statusFilter === f ? styles.filterComplete : ""}
+                ${f === "Pending"  && statusFilter === f ? styles.filterPending  : ""}
+              `}
+              onClick={() => setStatusFilter(f)}
+            >
+              {f === "Complete" && <span className={styles.dot} style={{ background: "var(--clr-complete)" }} />}
+              {f === "Pending"  && <span className={styles.dot} style={{ background: "var(--clr-pending)"  }} />}
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* ── Pending banner ── */}
+      {pendingCount > 0 && statusFilter !== "Complete" && (
+        <div className={styles.pendingBanner}>
+          <span className={styles.pendingBannerDot} />
+          <span>
+            <strong>{pendingCount}</strong> order{pendingCount !== 1 ? "s" : ""} awaiting fulfilment
+          </span>
+        </div>
+      )}
 
       {/* ── List ── */}
       <div className={styles.list}>
@@ -132,6 +189,7 @@ export default function OrdersPage() {
               isExpanded={expandedId === order.id}
               onToggle={() => setExpandedId(expandedId === order.id ? null : order.id)}
               onDelete={() => setDeleteTarget(order)}
+              onMarkComplete={() => setCompleteTarget(order)}
             />
           ))
         )}
@@ -156,9 +214,19 @@ export default function OrdersPage() {
         confirmLabel="Delete All"
         danger
       />
+      <ConfirmDialog
+        isOpen={!!completeTarget}
+        onClose={() => setCompleteTarget(null)}
+        onConfirm={() => updateOrderStatus(completeTarget.id, "Complete")}
+        title="Mark order as complete?"
+        message={`Order ${completeTarget ? formatOrderId(completeTarget.id) : ""} will be marked as completed.`}
+        confirmLabel="Mark Complete"
+      />
     </div>
   );
 }
+
+/* ─── helpers ──────────────────────────────────────────────── */
 
 function payMeta(method) {
   if (method === "Cash")   return { icon: "💵", bg: "#dcfce7", badge: "cash"   };
@@ -166,12 +234,21 @@ function payMeta(method) {
   return                          { icon: "💳", bg: "#dbeafe", badge: "card"   };
 }
 
-function OrderCard({ order, isExpanded, onToggle, onDelete }) {
+/* ─── OrderCard ─────────────────────────────────────────────── */
+
+function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete }) {
   const { icon, bg, badge } = payMeta(order.paymentMethod);
   const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
 
+  // Default existing orders (no status field) to "Complete"
+  const status    = order.status ?? "Complete";
+  const isPending = status === "Pending";
+
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} ${isPending ? styles.cardPending : styles.cardComplete}`}>
+
+      {/* Status stripe */}
+      <div className={`${styles.statusStripe} ${isPending ? styles.stripePending : styles.stripeComplete}`} />
 
       {/* Summary row */}
       <div
@@ -194,6 +271,11 @@ function OrderCard({ order, isExpanded, onToggle, onDelete }) {
 
         <Badge variant={badge}>{order.paymentMethod}</Badge>
 
+        {/* Status badge — NEW */}
+        <span className={`${styles.statusBadge} ${isPending ? styles.statusBadgePending : styles.statusBadgeComplete}`}>
+          {isPending ? "⏳ Pending" : "✓ Complete"}
+        </span>
+
         <span className={styles.cardItems}>{itemCount} item{itemCount !== 1 ? "s" : ""}</span>
         <span className={styles.cardTotal}>₱{order.total.toFixed(2)}</span>
         <span className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ""}`}>▼</span>
@@ -203,6 +285,14 @@ function OrderCard({ order, isExpanded, onToggle, onDelete }) {
       {isExpanded && (
         <div className={styles.detail}>
           <div className={styles.detailInner}>
+
+            {/* Pending notice */}
+            {isPending && (
+              <div className={styles.pendingNotice}>
+                <span>⚠️</span>
+                <span>This order is still <strong>pending</strong> — waiting for fulfilment or payment confirmation.</span>
+              </div>
+            )}
 
             <div className={styles.itemList}>
               {order.items.map((item, i) => (
@@ -228,7 +318,14 @@ function OrderCard({ order, isExpanded, onToggle, onDelete }) {
             </div>
 
             <div className={styles.detailActions}>
-              <Button variant="danger" size="sm" onClick={onDelete}>Delete Order</Button>
+              {isPending && (
+                <Button variant="primary" size="sm" onClick={onMarkComplete}>
+                  ✓ Mark as Complete
+                </Button>
+              )}
+              <Button variant="danger" size="sm" onClick={onDelete}>
+                Delete Order
+              </Button>
             </div>
 
           </div>

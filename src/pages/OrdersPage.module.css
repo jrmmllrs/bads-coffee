@@ -1,205 +1,297 @@
-/* pages/OrdersPage.module.css — light theme matching OrderZ POS */
+/* OrdersPage.module.css — enhanced with Complete / Pending status */
 
-/* ── Header ── */
+/* ── CSS tokens ───────────────────────────────────────── */
+:root,
+.page-wrapper {
+  --clr-complete : #16a34a;   /* green-600  */
+  --clr-pending  : #d97706;   /* amber-600  */
+  --clr-complete-bg : #f0fdf4;
+  --clr-pending-bg  : #fffbeb;
+  --clr-complete-border : #bbf7d0;
+  --clr-pending-border  : #fde68a;
+}
+
+/* ── Header ───────────────────────────────────────────── */
 .header {
-  display:         flex;
-  align-items:     center;
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  flex-wrap:       wrap;
-  gap:             12px;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .title {
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size:   22px;
+  font-size: 1.5rem;
   font-weight: 700;
-  color:       #111827;
+  margin: 0 0 0.2rem;
 }
 
 .subtitle {
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size:   13px;
-  color:       #9ca3af;
-  margin-top:  3px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
 }
 
 .headerActions {
-  display:  flex;
-  gap:      8px;
-  flex-wrap: wrap;
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
-/* ── Stats row ── */
+/* ── Stats ────────────────────────────────────────────── */
 .statsRow {
-  display:   flex;
-  gap:       12px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
 .statCard {
-  flex:           1;
-  min-width:      130px;
-  background:     #fff;
-  border:         1px solid #e8eaed;
-  border-radius:  12px;
-  padding:        14px 18px;
-  display:        flex;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
   flex-direction: column;
-  gap:            4px;
-  box-shadow:     0 1px 3px rgba(0,0,0,0.05);
+  gap: 0.25rem;
+}
+
+.statCardComplete {
+  background: var(--clr-complete-bg);
+  border-color: var(--clr-complete-border);
+}
+
+.statCardPending {
+  background: var(--clr-pending-bg);
+  border-color: var(--clr-pending-border);
 }
 
 .statLabel {
-  font-family:    'DM Sans', 'Segoe UI', sans-serif;
-  font-size:      11px;
-  font-weight:    700;
-  color:          #9ca3af;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: #9ca3af;
+  font-weight: 600;
 }
 
 .statValue {
-  font-family: 'DM Mono', monospace;
-  font-size:   22px;
-  font-weight: 800;
-  color:       #111827;
-  line-height: 1.1;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
 }
 
-.statAccent { color: #e8521a; }
+.statAccent  { color: #2563eb; }
+.statSlash   { color: #9ca3af; font-weight: 400; }
+.statComplete{ color: var(--clr-complete); }
+.statPending { color: var(--clr-pending);  }
 
-.statSlash {
-  color:       #d1d5db;
-  font-weight: 400;
-}
-
-/* ── Filters ── */
+/* ── Filters ──────────────────────────────────────────── */
 .filters {
-  display:     flex;
-  gap:         10px;
-  flex-wrap:   wrap;
-  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .filterGroup {
-  display:       flex;
-  border:        1px solid #e0e3e8;
+  display: flex;
+  gap: 0.25rem;
+  background: #f3f4f6;
   border-radius: 8px;
-  overflow:      hidden;
-  background:    #fff;
+  padding: 3px;
 }
 
 .filterBtn {
-  padding:     8px 16px;
-  border:      none;
-  background:  transparent;
-  color:       #6b7280;
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size:   13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
   font-weight: 500;
-  cursor:      pointer;
-  transition:  background 0.15s, color 0.15s;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
-.filterBtn + .filterBtn { border-left: 1px solid #e0e3e8; }
-.filterBtn:hover        { background: #f8f9fb; color: #111827; }
+
+.filterBtn:hover { background: #e5e7eb; color: #111827; }
 
 .filterActive {
-  background:  #e8521a !important;
-  color:       #fff !important;
-  font-weight: 700 !important;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
 }
 
-/* ── Order list ── */
-.list {
-  display:        flex;
-  flex-direction: column;
-  gap:            10px;
+.filterComplete { color: var(--clr-complete) !important; }
+.filterPending  { color: var(--clr-pending)  !important; }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-/* ── Order card ── */
-.card {
-  background:    #fff;
-  border:        1px solid #e8eaed;
-  border-radius: 12px;
-  overflow:      hidden;
-  box-shadow:    0 1px 3px rgba(0,0,0,0.05);
-  transition:    border-color 0.15s, box-shadow 0.15s;
-}
-.card:hover {
-  border-color: #f4c4b0;
-  box-shadow:   0 3px 10px rgba(232,82,26,0.08);
-}
-
-.cardRow {
-  display:     flex;
+/* ── Pending banner ───────────────────────────────────── */
+.pendingBanner {
+  display: flex;
   align-items: center;
-  gap:         12px;
-  padding:     14px 18px;
-  cursor:      pointer;
+  gap: 0.6rem;
+  background: var(--clr-pending-bg);
+  border: 1px solid var(--clr-pending-border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: #92400e;
+  margin-bottom: 1rem;
+}
+
+.pendingBannerDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--clr-pending);
+  flex-shrink: 0;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.5; transform: scale(1.35); }
+}
+
+/* ── List ─────────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Card ─────────────────────────────────────────────── */
+.card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+
+.card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+
+/* Coloured left stripe */
+.statusStripe {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+
+.stripeComplete { background: var(--clr-complete); }
+.stripePending  { background: var(--clr-pending);  }
+
+/* Subtle tint for pending cards */
+.cardPending  { background: #fffdf7; }
+.cardComplete { background: #ffffff; }
+
+/* Summary row */
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 0.85rem 1.25rem;
+  cursor: pointer;
   user-select: none;
 }
 
+.cardRow:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+
 .payIcon {
-  width:           38px;
-  height:          38px;
-  border-radius:   10px;
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  font-size:       18px;
-  flex-shrink:     0;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
 }
 
 .cardMeta {
-  flex:           1;
-  display:        flex;
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap:            2px;
-  min-width:      0;
+  gap: 0.15rem;
 }
 
 .cardId {
-  font-family: 'DM Mono', monospace;
-  font-size:   13.5px;
-  font-weight: 700;
-  color:       #111827;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardDate {
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size:   11.5px;
-  color:       #9ca3af;
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+/* Status badge — NEW */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.statusBadgeComplete {
+  background: var(--clr-complete-bg);
+  color: var(--clr-complete);
+  border: 1px solid var(--clr-complete-border);
+}
+
+.statusBadgePending {
+  background: var(--clr-pending-bg);
+  color: var(--clr-pending);
+  border: 1px solid var(--clr-pending-border);
 }
 
 .cardItems {
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size:   12px;
-  color:       #9ca3af;
+  font-size: 0.78rem;
+  color: #6b7280;
   flex-shrink: 0;
 }
 
 .cardTotal {
-  font-family: 'DM Mono', monospace;
-  font-size:   16px;
-  font-weight: 800;
-  color:       #e8521a;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
   flex-shrink: 0;
 }
 
 .chevron {
-  color:      #d1d5db;
-  font-size:  12px;
-  flex-shrink: 0;
+  font-size: 0.6rem;
+  color: #9ca3af;
   transition: transform 0.2s;
+  flex-shrink: 0;
 }
+
 .chevronOpen { transform: rotate(180deg); }
 
-/* ── Expanded detail ── */
+/* ── Expanded detail ──────────────────────────────────── */
 .detail {
   border-top: 1px solid #f3f4f6;
-  padding:    0 18px 16px;
-  animation:  slideDown 0.18s ease;
+  animation: slideDown 0.18s ease;
 }
 
 @keyframes slideDown {
@@ -208,92 +300,73 @@
 }
 
 .detailInner {
-  background:    #f9fafb;
-  border:        1px solid #e8eaed;
-  border-radius: 10px;
-  padding:       14px;
-  margin-top:    12px;
+  padding: 1rem 1rem 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
+/* Pending notice */
+.pendingNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--clr-pending-bg);
+  border: 1px solid var(--clr-pending-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+/* Item list */
 .itemList {
-  display:        flex;
+  display: flex;
   flex-direction: column;
-  gap:            8px;
-  margin-bottom:  12px;
+  gap: 0.35rem;
 }
 
 .itemRow {
-  display:     flex;
+  display: flex;
   align-items: center;
-  gap:         8px;
+  gap: 0.5rem;
+  font-size: 0.85rem;
 }
 
-.itemName {
-  flex:        1;
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size:   13px;
-  color:       #4b5563;
-}
+.itemName  { flex: 1; color: #374151; }
+.itemQty   { color: #9ca3af; min-width: 2.5rem; text-align: right; }
+.itemTotal { font-weight: 600; color: #111827; min-width: 5rem; text-align: right; }
 
-.itemQty {
-  font-family:   'DM Mono', monospace;
-  font-size:     12px;
-  color:         #9ca3af;
-  background:    #e8eaed;
-  padding:       2px 7px;
-  border-radius: 20px;
-}
-
-.itemTotal {
-  font-family: 'DM Mono', monospace;
-  font-size:   13px;
-  font-weight: 600;
-  color:       #374151;
-}
-
+/* Subtotals */
 .subtotals {
-  border-top:     1px dashed #e0e3e8;
-  padding-top:    10px;
-  display:        flex;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 0.6rem;
+  display: flex;
   flex-direction: column;
-  gap:            5px;
-  margin-bottom:  12px;
+  gap: 0.3rem;
 }
 
 .subtotalRow {
-  display:         flex;
+  display: flex;
   justify-content: space-between;
-  font-family:     'DM Sans', 'Segoe UI', sans-serif;
-  font-size:       12.5px;
-  color:           #6b7280;
+  font-size: 0.82rem;
+  color: #6b7280;
 }
 
 .grandTotal {
-  font-family: 'DM Mono', monospace !important;
-  font-size:   15px !important;
-  font-weight: 800 !important;
-  color:       #111827 !important;
-  padding-top: 8px;
-  margin-top:  4px;
-  border-top:  1px solid #e0e3e8;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #111827;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.4rem;
+  margin-top: 0.1rem;
 }
 
+/* Detail actions */
 .detailActions {
-  display:         flex;
+  display: flex;
+  gap: 0.5rem;
   justify-content: flex-end;
-}
-
-/* ── Responsive ── */
-@media (max-width: 600px) {
-  .statsRow  { gap: 8px; }
-  .statCard  { min-width: 100px; padding: 12px 14px; }
-  .statValue { font-size: 18px; }
-  .cardRow   { gap: 8px; padding: 12px 14px; }
-  .cardTotal { font-size: 14px; }
-  .cardItems { display: none; }
-}
-
-@media (max-width: 400px) {
-  .filters     { flex-direction: column; align-items: stretch; }
-  .filterGroup { justify-content: center; }
+  flex-wrap: wrap;
 }

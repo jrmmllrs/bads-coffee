@@ -93,19 +93,36 @@ export const AppProvider = ({ children }) => {
   const tax      = subtotal * 0.1;
   const total    = subtotal + tax;
 
+  // Saves order as "Pending" — cashier must mark it Complete manually
   const completeOrder = async (paymentMethod) => {
     if (!currentOrder.length) return;
     const order = {
       id: Date.now(), items: [...currentOrder],
       subtotal, tax, total,
       timestamp: new Date().toISOString(),
-      paymentMethod, status: "completed",
+      paymentMethod,
+      status: "Pending",   // starts Pending; use updateOrderStatus to complete
     };
     await dbAdd("orders", order);
     await refresh();
     setCurrentOrder([]);
-    showToast(`Order done! Total $${total.toFixed(2)}`);
+    showToast(`Order placed! Total ₱${total.toFixed(2)}`);
     return order;
+  };
+
+  // ── NEW: flip an order between "Pending" and "Complete" ──
+  const updateOrderStatus = async (id, newStatus) => {
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    const updated = { ...order, status: newStatus };
+    await dbPut("orders", updated);
+    await refresh();
+    showToast(
+      newStatus === "Complete"
+        ? "Order marked as complete ✓"
+        : "Order moved back to pending",
+      newStatus === "Complete" ? "success" : "info"
+    );
   };
 
   const deleteOrder = async (id) => {
@@ -126,7 +143,8 @@ export const AppProvider = ({ children }) => {
       addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
       addCategory, updateCategory, deleteCategory,
       addToOrder, updateQuantity, clearCurrentOrder, completeOrder,
-      deleteOrder, clearAllOrders, showToast,
+      deleteOrder, clearAllOrders, updateOrderStatus,   // ← added
+      showToast,
     }}>
       {children}
     </AppContext.Provider>
