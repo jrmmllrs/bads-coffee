@@ -1,9 +1,3 @@
-/**
- * context/AppContext.jsx
- * Global state + actions for the entire POS app.
- * All IndexedDB reads/writes happen here.
- */
-
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { initDatabase, dbGetAll, dbAdd, dbPut, dbDelete, dbClear } from "../utils/db";
 
@@ -90,38 +84,61 @@ export const AppProvider = ({ children }) => {
   const clearCurrentOrder = () => setCurrentOrder([]);
 
   const subtotal = currentOrder.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const tax      = subtotal * 0.1;
-  const total    = subtotal + tax;
+  const total    = subtotal; // no tax
 
-  // Saves order as "Pending" — cashier must mark it Complete manually
-  const completeOrder = async (paymentMethod) => {
+  const completeOrder = async (paymentMethod, customerName = "Guest") => {
     if (!currentOrder.length) return;
     const order = {
-      id: Date.now(), items: [...currentOrder],
-      subtotal, tax, total,
+      id: Date.now(),
+      items: [...currentOrder],
+      subtotal,
+      total,
       timestamp: new Date().toISOString(),
       paymentMethod,
-      status: "Pending",   // starts Pending; use updateOrderStatus to complete
+      customerName,
+      status: "Pending",
+      paymentStatus: "Unpaid",
     };
     await dbAdd("orders", order);
     await refresh();
     setCurrentOrder([]);
-    showToast(`Order placed! Total ₱${total.toFixed(2)}`);
+    showToast(`Order placed for ${customerName}! Total ₱${total.toFixed(2)}`);
     return order;
   };
 
-  // ── NEW: flip an order between "Pending" and "Complete" ──
+  // ── Update entire order (edit) ──
+  const updateOrder = async (updatedOrder) => {
+    const items    = updatedOrder.items.filter((i) => i.quantity > 0);
+    const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const total    = subtotal; // no tax
+    const saved    = { ...updatedOrder, items, subtotal, total };
+    await dbPut("orders", saved);
+    await refresh();
+    showToast("Order updated ✓");
+    return saved;
+  };
+
+  // ── Flip fulfillment status ──
   const updateOrderStatus = async (id, newStatus) => {
     const order = orders.find((o) => o.id === id);
     if (!order) return;
-    const updated = { ...order, status: newStatus };
-    await dbPut("orders", updated);
+    await dbPut("orders", { ...order, status: newStatus });
     await refresh();
     showToast(
-      newStatus === "Complete"
-        ? "Order marked as complete ✓"
-        : "Order moved back to pending",
+      newStatus === "Complete" ? "Order marked as complete ✓" : "Order moved back to pending",
       newStatus === "Complete" ? "success" : "info"
+    );
+  };
+
+  // ── Flip payment status ──
+  const updatePaymentStatus = async (id, newPaymentStatus) => {
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    await dbPut("orders", { ...order, paymentStatus: newPaymentStatus });
+    await refresh();
+    showToast(
+      newPaymentStatus === "Paid" ? "Order marked as paid 💳" : "Order marked as unpaid",
+      newPaymentStatus === "Paid" ? "success" : "info"
     );
   };
 
@@ -139,11 +156,12 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{
       ready, menuItems, orders, categories,
-      currentOrder, subtotal, tax, total, toast,
+      currentOrder, subtotal, total, toast,
       addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
       addCategory, updateCategory, deleteCategory,
       addToOrder, updateQuantity, clearCurrentOrder, completeOrder,
-      deleteOrder, clearAllOrders, updateOrderStatus,   // ← added
+      deleteOrder, clearAllOrders,
+      updateOrder, updateOrderStatus, updatePaymentStatus,
       showToast,
     }}>
       {children}

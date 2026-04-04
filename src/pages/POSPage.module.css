@@ -478,3 +478,69 @@
   .grid    { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
   .catBtn  { padding: 6px 12px; font-size: 12px; }
 }
+
+/* ── Customer name ── */
+.customerWrap {
+  padding:       10px 16px;
+  border-bottom: 1px solid #e8eaed;
+  flex-shrink:   0;
+}
+
+.customerLabel {
+  display:       block;
+  font-size:     11px;
+  font-weight:   700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color:         #9ca3af;
+  margin-bottom: 6px;
+}
+
+.customerInputWrap {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  background:  #f9fafb;
+  border:      1.5px solid #e0e3e8;
+  border-radius: 10px;
+  padding:     0 10px;
+  transition:  border-color 0.15s, box-shadow 0.15s;
+}
+
+.customerInputWrap:focus-within {
+  border-color: #e8521a;
+  box-shadow:   0 0 0 3px rgba(232, 82, 26, 0.1);
+  background:   #fff;
+}
+
+.customerIcon {
+  font-size:  15px;
+  flex-shrink: 0;
+}
+
+.customerInput {
+  flex:        1;
+  border:      none;
+  background:  transparent;
+  font-family: inherit;
+  font-size:   13px;
+  font-weight: 500;
+  color:       #111827;
+  padding:     9px 0;
+  outline:     none;
+}
+
+.customerInput::placeholder { color: #c4c9d4; }
+
+.customerClear {
+  background:  none;
+  border:      none;
+  color:       #c4c9d4;
+  cursor:      pointer;
+  font-size:   11px;
+  padding:     2px;
+  line-height: 1;
+  transition:  color 0.15s;
+  flex-shrink: 0;
+}
+.customerClear:hover { color: #9ca3af; }

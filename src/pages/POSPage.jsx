@@ -1,8 +1,3 @@
-/**
- * pages/POSPage.jsx
- * Clean POS — horizontal category pills, product grid, cash-only cart panel.
- */
-
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { ItemVisual } from "./MenuPage";
@@ -18,19 +13,25 @@ let orderCounter = 3;
 export default function POSPage() {
   const {
     menuItems, categories,
-    currentOrder, subtotal, tax, total,
+    currentOrder, subtotal, total,
     addToOrder, updateQuantity, clearCurrentOrder, completeOrder,
   } = useApp();
 
-  const [selCat,    setSelCat]    = useState("All");
-  const [showPanel, setShowPanel] = useState(false);
-  const [payMethod, setPayMethod] = useState("Cash");
-  const [orderNo]                 = useState(() => String(++orderCounter).padStart(3, "0"));
+  const [selCat,       setSelCat]       = useState("All");
+  const [showPanel,    setShowPanel]    = useState(false);
+  const [payMethod,    setPayMethod]    = useState("Cash");
+  const [customerName, setCustomerName] = useState("");
+  const [orderNo]                       = useState(() => String(++orderCounter).padStart(3, "0"));
 
-  const today     = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
-  const allCats   = ["All", ...categories.map((c) => c.name)];
-  const filtered  = selCat === "All" ? menuItems : menuItems.filter((i) => i.category === selCat);
+  const today    = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
+  const allCats  = ["All", ...categories.map((c) => c.name)];
+  const filtered = selCat === "All" ? menuItems : menuItems.filter((i) => i.category === selCat);
   const itemCount = currentOrder.reduce((s, i) => s + i.quantity, 0);
+
+  const handlePlaceOrder = () => {
+    completeOrder(payMethod, customerName.trim() || "Guest");
+    setCustomerName("");
+  };
 
   return (
     <div className={styles.page}>
@@ -90,6 +91,25 @@ export default function POSPage() {
           </div>
         </div>
 
+        {/* Customer name input */}
+        <div className={styles.customerWrap}>
+          <label className={styles.customerLabel}>Customer Name</label>
+          <div className={styles.customerInputWrap}>
+            <span className={styles.customerIcon}>👤</span>
+            <input
+              className={styles.customerInput}
+              type="text"
+              placeholder="Enter customer name…"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              maxLength={50}
+            />
+            {customerName && (
+              <button className={styles.customerClear} onClick={() => setCustomerName("")}>✕</button>
+            )}
+          </div>
+        </div>
+
         <div className={styles.orderList}>
           {currentOrder.length === 0
             ? <div className={styles.empty}><span>🛒</span><p>Tap items to add</p></div>
@@ -100,14 +120,6 @@ export default function POSPage() {
         </div>
 
         <div className={styles.totals}>
-          <div className={styles.totalRow}>
-            <span>Subtotal</span>
-            <span className={styles.totalRowValue}>₱{subtotal.toFixed(2)}</span>
-          </div>
-          <div className={styles.totalRow}>
-            <span>Tax (10%)</span>
-            <span className={styles.totalRowValue}>₱{tax.toFixed(2)}</span>
-          </div>
           <hr className={styles.totalDivider} />
           <div className={styles.totalBigRow}>
             <span className={styles.totalBigLabel}>Total</span>
@@ -134,12 +146,14 @@ export default function POSPage() {
         <div className={styles.payBtns}>
           <button
             className={styles.placeOrderBtn}
-            onClick={() => completeOrder(payMethod)}
+            onClick={handlePlaceOrder}
             disabled={!currentOrder.length}
           >
-            Place Order
+            {customerName.trim()
+              ? `Place Order — ${customerName.trim()}`
+              : "Place Order"}
           </button>
-          <button className={styles.cancelBtn} onClick={clearCurrentOrder}>
+          <button className={styles.cancelBtn} onClick={() => { clearCurrentOrder(); setCustomerName(""); }}>
             Cancel Order
           </button>
         </div>

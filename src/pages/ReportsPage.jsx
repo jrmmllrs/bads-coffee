@@ -49,16 +49,14 @@ export default function ReportsPage() {
   );
 
   // ── Aggregates ──
-  const totalSubtotal = filtered.reduce((s, o) => s + o.subtotal, 0);
-  const totalTax      = filtered.reduce((s, o) => s + o.tax,      0);
-  const totalRevenue  = filtered.reduce((s, o) => s + o.total,    0);
-  const avgOrder      = filtered.length ? totalRevenue / filtered.length : 0;
+  const totalRevenue = filtered.reduce((s, o) => s + o.total, 0);
+  const avgOrder     = filtered.length ? totalRevenue / filtered.length : 0;
 
   // Payment split (Cash + Wallet)
-  const cashOrds    = filtered.filter((o) => o.paymentMethod === "Cash");
-  const walletOrds  = filtered.filter((o) => o.paymentMethod === "Wallet");
-  const cashPct     = filtered.length ? Math.round((cashOrds.length / filtered.length) * 100) : 0;
-  const walletPct   = filtered.length ? Math.round((walletOrds.length / filtered.length) * 100) : 0;
+  const cashOrds      = filtered.filter((o) => o.paymentMethod === "Cash");
+  const walletOrds    = filtered.filter((o) => o.paymentMethod === "Wallet");
+  const cashPct       = filtered.length ? Math.round((cashOrds.length / filtered.length) * 100) : 0;
+  const walletPct     = filtered.length ? Math.round((walletOrds.length / filtered.length) * 100) : 0;
   const cashRevenue   = cashOrds.reduce((s, o) => s + o.total, 0);
   const walletRevenue = walletOrds.reduce((s, o) => s + o.total, 0);
 
@@ -160,30 +158,24 @@ export default function ReportsPage() {
 
       {/* ── Stat cards ── */}
       <div className={styles.statGrid}>
-        <StatCard label="Orders"        value={filtered.length}                    sub={filterLabel}  color="var(--accent)" icon="🧾" />
-        <StatCard label="Revenue"       value={`₱${totalRevenue.toFixed(2)}`}      sub="incl. tax"    color="var(--blue)"   icon="💰" />
-        <StatCard label="Tax Collected" value={`₱${totalTax.toFixed(2)}`}          sub="10% rate"     color="var(--red)"    icon="🏛" />
-        <StatCard label="Avg Order"     value={`₱${avgOrder.toFixed(2)}`}          sub="per order"    color="var(--pink)"   icon="📈" />
+        <StatCard label="Orders"    value={filtered.length}               sub={filterLabel} color="var(--accent)" icon="🧾" />
+        <StatCard label="Revenue"   value={`₱${totalRevenue.toFixed(2)}`} sub="total sales" color="var(--blue)"   icon="💰" />
+        <StatCard label="Avg Order" value={`₱${avgOrder.toFixed(2)}`}     sub="per order"   color="var(--pink)"   icon="📈" />
       </div>
 
       {/* ── Revenue Breakdown ── */}
       <div className={styles.breakdownCard}>
         <h3 className={styles.cardTitle}>Revenue Breakdown · {filterLabel}</h3>
         <div className={styles.breakdownGrid}>
-          <BreakdownRow icon="🧾" iconBg="rgba(232,82,26,0.10)"  label="Total Subtotal"      sub="Before tax"       value={`₱${totalSubtotal.toFixed(2)}`} color="#e8521a" />
-          <div className={styles.breakdownDivider} />
-          <BreakdownRow icon="🏛"  iconBg="rgba(239,68,68,0.10)"  label="Total Tax Collected" sub="10% on all orders" value={`₱${totalTax.toFixed(2)}`}      color="#ef4444" />
-          <div className={styles.breakdownDivider} />
-          <BreakdownRow icon="💰"  iconBg="rgba(37,99,235,0.10)"  label="Grand Total"         sub="Subtotal + Tax"    value={`₱${totalRevenue.toFixed(2)}`}  color="#2563eb" big />
-
-          {filtered.length > 0 && (
-            <div className={styles.verifyRow}>
-              <span className={styles.verifyText}>
-                ✓ ₱{totalSubtotal.toFixed(2)} + ₱{totalTax.toFixed(2)} = ₱{totalRevenue.toFixed(2)}
-              </span>
-              <span className={styles.verifyBadge}>Balanced</span>
-            </div>
-          )}
+          <BreakdownRow
+            icon="💰"
+            iconBg="rgba(37,99,235,0.10)"
+            label="Total Revenue"
+            sub="Sum of all orders"
+            value={`₱${totalRevenue.toFixed(2)}`}
+            color="#2563eb"
+            big
+          />
         </div>
       </div>
 

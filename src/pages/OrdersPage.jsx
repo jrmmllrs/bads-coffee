@@ -1,62 +1,54 @@
-/**
- * pages/OrdersPage.jsx
- * Order history with Complete / Pending status, expand/collapse,
- * filters, delete, export, and mark-complete action.
- */
-
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import Button from "../components/ui/Button";
 import { Badge, EmptyState, ConfirmDialog } from "../components/ui/index.jsx";
 import {
-  formatDate,
-  formatTime,
-  formatOrderId,
-  isToday,
-  isWithinDays,
+  formatDate, formatTime, formatOrderId, isToday, isWithinDays,
 } from "../utils/formatters";
 import styles from "./OrdersPage.module.css";
 
-const PAY_FILTERS  = ["All", "Cash", "E Wallet"];
-const DATE_FILTERS = [
-  ["all",   "All Time" ],
-  ["today", "Today"    ],
-  ["week",  "This Week"],
-];
-const STATUS_FILTERS = ["All", "Complete", "Pending"];
+const PAY_FILTERS            = [["all","All"],["Cash","Cash"],["Wallet","Wallet"]];
+const DATE_FILTERS           = [["all","All time"],["today","Today"],["week","This week"]];
+const STATUS_FILTERS         = [["All","All"],["Complete","Complete"],["Pending","Pending"]];
+const PAYMENT_STATUS_FILTERS = [["All","All"],["Paid","Paid"],["Unpaid","Unpaid"]];
 
 export default function OrdersPage() {
-  const { orders, deleteOrder, clearAllOrders, updateOrderStatus } = useApp();
+  const {
+    orders, menuItems,
+    deleteOrder, clearAllOrders, updateOrder,
+    updateOrderStatus, updatePaymentStatus,
+  } = useApp();
 
-  const [payFilter,      setPayFilter]      = useState("All");
+  const [payFilter,      setPayFilter]      = useState("all");
   const [dateFilter,     setDateFilter]     = useState("all");
   const [statusFilter,   setStatusFilter]   = useState("All");
+  const [paymentFilter,  setPaymentFilter]  = useState("All");
   const [expandedId,     setExpandedId]     = useState(null);
   const [showClearDlg,   setShowClearDlg]   = useState(false);
   const [deleteTarget,   setDeleteTarget]   = useState(null);
   const [completeTarget, setCompleteTarget] = useState(null);
+  const [markPaidTarget, setMarkPaidTarget] = useState(null);
+  const [editTarget,     setEditTarget]     = useState(null);
 
   const filtered = orders.filter((o) => {
-    const matchPay    = payFilter === "All" || o.paymentMethod === payFilter;
-    const matchDate   =
+    const matchPay     = payFilter === "all" || o.paymentMethod === payFilter;
+    const matchDate    =
       dateFilter === "today" ? isToday(o.timestamp)
       : dateFilter === "week" ? isWithinDays(o.timestamp, 7)
       : true;
-    const matchStatus =
-      statusFilter === "All" || (o.status ?? "Complete") === statusFilter;
-    return matchPay && matchDate && matchStatus;
+    const matchStatus  = statusFilter === "All" || (o.status ?? "Pending") === statusFilter;
+    const matchPayment = paymentFilter === "All" || (o.paymentStatus ?? "Unpaid") === paymentFilter;
+    return matchPay && matchDate && matchStatus && matchPayment;
   });
 
   const totalRevenue  = filtered.reduce((s, o) => s + o.total, 0);
   const avgOrder      = filtered.length ? totalRevenue / filtered.length : 0;
-  const pendingCount  = orders.filter((o) => (o.status ?? "Complete") === "Pending").length;
-  const completeCount = orders.filter((o) => (o.status ?? "Complete") === "Complete").length;
+  const pendingCount  = orders.filter((o) => (o.status ?? "Pending") === "Pending").length;
+  const unpaidCount   = orders.filter((o) => (o.paymentStatus ?? "Unpaid") === "Unpaid").length;
 
   const exportJSON = () => {
     const a = document.createElement("a");
-    a.href =
-      "data:application/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(orders, null, 2));
+    a.href = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(orders, null, 2));
     a.download = `orders-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
   };
@@ -74,106 +66,55 @@ export default function OrdersPage() {
           </p>
         </div>
         <div className={styles.headerActions}>
-          <Button variant="ghost" size="sm" onClick={exportJSON}>↓ Export JSON</Button>
-          <Button variant="danger" size="sm" onClick={() => setShowClearDlg(true)}>Clear All</Button>
+          <Button variant="ghost" size="sm" onClick={exportJSON}>↓ Export</Button>
+          <Button variant="danger" size="sm" onClick={() => setShowClearDlg(true)}>Clear all</Button>
         </div>
       </div>
 
       {/* ── Stats ── */}
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Total Orders</span>
-          <span className={styles.statValue}>{filtered.length}</span>
+          <span className={styles.statLabel}>Revenue</span>
+          <span className={`${styles.statValue} ${styles.statBlue}`}>₱{totalRevenue.toFixed(2)}</span>
         </div>
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Total Revenue</span>
-          <span className={`${styles.statValue} ${styles.statAccent}`}>
-            ₱{totalRevenue.toFixed(2)}
-          </span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statLabel}>Average Order</span>
+          <span className={styles.statLabel}>Avg order</span>
           <span className={styles.statValue}>₱{avgOrder.toFixed(2)}</span>
         </div>
         <div className={styles.statCard}>
-          <span className={styles.statLabel}>Cash / E Wallet</span>
-          <span className={styles.statValue}>
-            {orders.filter((o) => o.paymentMethod === "Cash").length}
-            <span className={styles.statSlash}> / </span>
-            {orders.filter((o) => o.paymentMethod !== "Cash").length}
-          </span>
-        </div>
-        {/* NEW — status split */}
-        <div className={`${styles.statCard} ${styles.statCardComplete}`}>
-          <span className={styles.statLabel}>Completed</span>
-          <span className={`${styles.statValue} ${styles.statComplete}`}>
-            {completeCount}
-          </span>
-        </div>
-        <div className={`${styles.statCard} ${styles.statCardPending}`}>
           <span className={styles.statLabel}>Pending</span>
-          <span className={`${styles.statValue} ${styles.statPending}`}>
-            {pendingCount}
-          </span>
+          <span className={`${styles.statValue} ${styles.statAmber}`}>{pendingCount}</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statLabel}>Unpaid</span>
+          <span className={`${styles.statValue} ${styles.statRed}`}>{unpaidCount}</span>
         </div>
       </div>
 
       {/* ── Filters ── */}
-      <div className={styles.filters}>
-        {/* Payment */}
-        <div className={styles.filterGroup}>
-          {PAY_FILTERS.map((f) => (
-            <button
-              key={f}
-              className={`${styles.filterBtn} ${payFilter === f ? styles.filterActive : ""}`}
-              onClick={() => setPayFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+      <div className={styles.filterBar}>
+        <span className={styles.filterBarLabel}>Filter</span>
 
-        {/* Date */}
-        <div className={styles.filterGroup}>
-          {DATE_FILTERS.map(([v, l]) => (
-            <button
-              key={v}
-              className={`${styles.filterBtn} ${dateFilter === v ? styles.filterActive : ""}`}
-              onClick={() => setDateFilter(v)}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-
-        {/* Status — NEW */}
-        <div className={styles.filterGroup}>
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f}
-              className={`
-                ${styles.filterBtn}
-                ${statusFilter === f ? styles.filterActive : ""}
-                ${f === "Complete" && statusFilter === f ? styles.filterComplete : ""}
-                ${f === "Pending"  && statusFilter === f ? styles.filterPending  : ""}
-              `}
-              onClick={() => setStatusFilter(f)}
-            >
-              {f === "Complete" && <span className={styles.dot} style={{ background: "var(--clr-complete)" }} />}
-              {f === "Pending"  && <span className={styles.dot} style={{ background: "var(--clr-pending)"  }} />}
-              {f}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl options={DATE_FILTERS}           value={dateFilter}    onChange={setDateFilter}    />
+        <div className={styles.filterDivider} />
+        <SegmentedControl options={PAY_FILTERS}            value={payFilter}     onChange={setPayFilter}     />
+        <div className={styles.filterDivider} />
+        <SegmentedControl options={STATUS_FILTERS}         value={statusFilter}  onChange={setStatusFilter}  colorMap={{ Complete: "green", Pending: "amber" }} />
+        <div className={styles.filterDivider} />
+        <SegmentedControl options={PAYMENT_STATUS_FILTERS} value={paymentFilter} onChange={setPaymentFilter} colorMap={{ Paid: "blue", Unpaid: "red" }} />
       </div>
 
-      {/* ── Pending banner ── */}
+      {/* ── Banners ── */}
       {pendingCount > 0 && statusFilter !== "Complete" && (
-        <div className={styles.pendingBanner}>
-          <span className={styles.pendingBannerDot} />
-          <span>
-            <strong>{pendingCount}</strong> order{pendingCount !== 1 ? "s" : ""} awaiting fulfilment
-          </span>
+        <div className={`${styles.banner} ${styles.bannerAmber}`}>
+          <span className={`${styles.bannerDot} ${styles.bannerDotAmber}`} />
+          <span><strong>{pendingCount}</strong> order{pendingCount !== 1 ? "s" : ""} awaiting fulfilment</span>
+        </div>
+      )}
+      {unpaidCount > 0 && paymentFilter !== "Paid" && (
+        <div className={`${styles.banner} ${styles.bannerRed}`}>
+          <span className={`${styles.bannerDot} ${styles.bannerDotRed}`} />
+          <span><strong>{unpaidCount}</strong> order{unpaidCount !== 1 ? "s" : ""} awaiting payment</span>
         </div>
       )}
 
@@ -190,6 +131,8 @@ export default function OrdersPage() {
               onToggle={() => setExpandedId(expandedId === order.id ? null : order.id)}
               onDelete={() => setDeleteTarget(order)}
               onMarkComplete={() => setCompleteTarget(order)}
+              onMarkPaid={() => setMarkPaidTarget(order)}
+              onEdit={() => setEditTarget(order)}
             />
           ))
         )}
@@ -199,7 +142,7 @@ export default function OrdersPage() {
       <ConfirmDialog
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteOrder(deleteTarget.id)}
+        onConfirm={() => { deleteOrder(deleteTarget.id); setDeleteTarget(null); }}
         title="Delete this order?"
         message={`Order ${deleteTarget ? formatOrderId(deleteTarget.id) : ""} will be permanently deleted.`}
         confirmLabel="Delete"
@@ -208,7 +151,7 @@ export default function OrdersPage() {
       <ConfirmDialog
         isOpen={showClearDlg}
         onClose={() => setShowClearDlg(false)}
-        onConfirm={clearAllOrders}
+        onConfirm={() => { clearAllOrders(); setShowClearDlg(false); }}
         title="Clear all orders?"
         message={`This will permanently delete all ${orders.length} orders. This cannot be undone.`}
         confirmLabel="Delete All"
@@ -217,16 +160,63 @@ export default function OrdersPage() {
       <ConfirmDialog
         isOpen={!!completeTarget}
         onClose={() => setCompleteTarget(null)}
-        onConfirm={() => updateOrderStatus(completeTarget.id, "Complete")}
+        onConfirm={() => { updateOrderStatus(completeTarget.id, "Complete"); setCompleteTarget(null); }}
         title="Mark order as complete?"
         message={`Order ${completeTarget ? formatOrderId(completeTarget.id) : ""} will be marked as completed.`}
         confirmLabel="Mark Complete"
       />
+      <ConfirmDialog
+        isOpen={!!markPaidTarget}
+        onClose={() => setMarkPaidTarget(null)}
+        onConfirm={() => { updatePaymentStatus(markPaidTarget.id, "Paid"); setMarkPaidTarget(null); }}
+        title="Mark order as paid?"
+        message={`Order ${markPaidTarget ? formatOrderId(markPaidTarget.id) : ""} will be marked as paid.`}
+        confirmLabel="Mark as Paid"
+      />
+
+      {/* ── Edit Modal ── */}
+      {editTarget && (
+        <EditOrderModal
+          order={editTarget}
+          menuItems={menuItems}
+          onClose={() => setEditTarget(null)}
+          onSave={async (updated) => {
+            await updateOrder(updated);
+            setEditTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-/* ─── helpers ──────────────────────────────────────────────── */
+/* ─── SegmentedControl ───────────────────────────────────────── */
+
+function SegmentedControl({ options, value, onChange, colorMap = {} }) {
+  return (
+    <div className={styles.seg}>
+      {options.map(([val, label]) => {
+        const isActive = value === val;
+        const color = colorMap[val];
+        return (
+          <button
+            key={val}
+            className={[
+              styles.segBtn,
+              isActive ? styles.segBtnActive : "",
+              isActive && color ? styles[`segBtnActive_${color}`] : "",
+            ].join(" ")}
+            onClick={() => onChange(val)}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── helpers ───────────────────────────────────────────────── */
 
 function payMeta(method) {
   if (method === "Cash")   return { icon: "💵", bg: "#dcfce7", badge: "cash"   };
@@ -236,18 +226,21 @@ function payMeta(method) {
 
 /* ─── OrderCard ─────────────────────────────────────────────── */
 
-function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete }) {
+function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete, onMarkPaid, onEdit }) {
   const { icon, bg, badge } = payMeta(order.paymentMethod);
-  const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
-
-  // Default existing orders (no status field) to "Complete"
-  const status    = order.status ?? "Complete";
-  const isPending = status === "Pending";
+  const itemCount     = order.items.reduce((s, i) => s + i.quantity, 0);
+  const status        = order.status ?? "Pending";
+  const paymentStatus = order.paymentStatus ?? "Unpaid";
+  const isPending     = status === "Pending";
+  const isUnpaid      = paymentStatus === "Unpaid";
+  const customerName  = order.customerName ?? "Guest";
 
   return (
-    <div className={`${styles.card} ${isPending ? styles.cardPending : styles.cardComplete}`}>
+    <div className={[
+      styles.card,
+      isPending ? styles.cardPending : styles.cardComplete,
+    ].join(" ")}>
 
-      {/* Status stripe */}
       <div className={`${styles.statusStripe} ${isPending ? styles.stripePending : styles.stripeComplete}`} />
 
       {/* Summary row */}
@@ -258,25 +251,29 @@ function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete }) {
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onToggle()}
       >
-        <div className={styles.payIcon} style={{ background: bg }}>
-          {icon}
-        </div>
+        <div className={styles.payIcon} style={{ background: bg }}>{icon}</div>
 
         <div className={styles.cardMeta}>
           <span className={styles.cardId}>{formatOrderId(order.id)}</span>
-          <span className={styles.cardDate}>
+          <span className={styles.cardSub}>
+            👤 {customerName}
+            {" · "}
             {formatDate(order.timestamp)}, {formatTime(order.timestamp)}
+            {" · "}
+            {itemCount} item{itemCount !== 1 ? "s" : ""}
           </span>
         </div>
 
-        <Badge variant={badge}>{order.paymentMethod}</Badge>
+        <div className={styles.cardBadges}>
+          <Badge variant={badge}>{order.paymentMethod}</Badge>
+          <span className={`${styles.statusBadge} ${isPending ? styles.statusBadgePending : styles.statusBadgeComplete}`}>
+            {isPending ? "⏳ Pending" : "✓ Complete"}
+          </span>
+          <span className={`${styles.statusBadge} ${isUnpaid ? styles.statusBadgeUnpaid : styles.statusBadgePaid}`}>
+            {isUnpaid ? "Unpaid" : "💳 Paid"}
+          </span>
+        </div>
 
-        {/* Status badge — NEW */}
-        <span className={`${styles.statusBadge} ${isPending ? styles.statusBadgePending : styles.statusBadgeComplete}`}>
-          {isPending ? "⏳ Pending" : "✓ Complete"}
-        </span>
-
-        <span className={styles.cardItems}>{itemCount} item{itemCount !== 1 ? "s" : ""}</span>
         <span className={styles.cardTotal}>₱{order.total.toFixed(2)}</span>
         <span className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ""}`}>▼</span>
       </div>
@@ -285,14 +282,6 @@ function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete }) {
       {isExpanded && (
         <div className={styles.detail}>
           <div className={styles.detailInner}>
-
-            {/* Pending notice */}
-            {isPending && (
-              <div className={styles.pendingNotice}>
-                <span>⚠️</span>
-                <span>This order is still <strong>pending</strong> — waiting for fulfilment or payment confirmation.</span>
-              </div>
-            )}
 
             <div className={styles.itemList}>
               {order.items.map((item, i) => (
@@ -305,32 +294,228 @@ function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete }) {
             </div>
 
             <div className={styles.subtotals}>
-              {[["Subtotal", order.subtotal], ["Tax (10%)", order.tax]].map(([l, v]) => (
-                <div key={l} className={styles.subtotalRow}>
-                  <span>{l}</span>
-                  <span>₱{v.toFixed(2)}</span>
-                </div>
-              ))}
               <div className={`${styles.subtotalRow} ${styles.grandTotal}`}>
                 <span>Total</span>
                 <span>₱{order.total.toFixed(2)}</span>
               </div>
             </div>
 
+            {/* Actions */}
             <div className={styles.detailActions}>
-              {isPending && (
-                <Button variant="primary" size="sm" onClick={onMarkComplete}>
-                  ✓ Mark as Complete
-                </Button>
-              )}
-              <Button variant="danger" size="sm" onClick={onDelete}>
-                Delete Order
-              </Button>
+              <div className={styles.detailActionsLeft}>
+                {isPending && (
+                  <Button variant="primary" size="sm" onClick={onMarkComplete}>✓ Complete</Button>
+                )}
+                {isUnpaid && (
+                  <Button variant="primary" size="sm" onClick={onMarkPaid}>💳 Mark paid</Button>
+                )}
+              </div>
+              <div className={styles.detailActionsRight}>
+                <Button variant="ghost" size="sm" onClick={onEdit}>✏️ Edit</Button>
+                <Button variant="danger" size="sm" onClick={onDelete}>Delete</Button>
+              </div>
             </div>
 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── EditOrderModal ─────────────────────────────────────────── */
+
+function EditOrderModal({ order, menuItems, onClose, onSave }) {
+  const [items,         setItems]         = useState(order.items.map((i) => ({ ...i })));
+  const [customerName,  setCustomerName]  = useState(order.customerName ?? "Guest");
+  const [paymentMethod, setPaymentMethod] = useState(order.paymentMethod);
+  const [status,        setStatus]        = useState(order.status ?? "Pending");
+  const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus ?? "Unpaid");
+  const [saving,        setSaving]        = useState(false);
+  const [tab,           setTab]           = useState("items");
+
+  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const total    = subtotal; // no tax
+
+  const setQty = (id, qty) => {
+    if (qty <= 0) setItems((prev) => prev.filter((i) => i.id !== id));
+    else setItems((prev) => prev.map((i) => i.id === id ? { ...i, quantity: qty } : i));
+  };
+
+  const addMenuItem = (menuItem) => {
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === menuItem.id);
+      if (existing) return prev.map((i) => i.id === menuItem.id ? { ...i, quantity: i.quantity + 1 } : i);
+      return [...prev, { ...menuItem, quantity: 1 }];
+    });
+  };
+
+  const handleSave = async () => {
+    if (!items.length) return;
+    setSaving(true);
+    await onSave({ ...order, items, customerName, paymentMethod, status, paymentStatus, subtotal, total });
+    setSaving(false);
+  };
+
+  const addableItems = menuItems.filter(
+    (m) => m.available && !items.find((i) => i.id === m.id)
+  );
+
+  return (
+    <div className={styles.modalBackdrop} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+
+        {/* Modal header */}
+        <div className={styles.modalHeader}>
+          <div>
+            <h3 className={styles.modalTitle}>Edit Order</h3>
+            <p className={styles.modalSubtitle}>
+              {formatOrderId(order.id)} · {order.customerName ?? "Guest"}
+            </p>
+          </div>
+          <button className={styles.modalClose} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div className={styles.modalTabs}>
+          {[["items", "🧾 Items"], ["settings", "⚙️ Settings"]].map(([key, label]) => (
+            <button
+              key={key}
+              className={`${styles.modalTab} ${tab === key ? styles.modalTabActive : ""}`}
+              onClick={() => setTab(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.modalBody}>
+
+          {/* ── Items tab ── */}
+          {tab === "items" && (
+            <div className={styles.modalSection}>
+              <p className={styles.modalSectionLabel}>Current items</p>
+              {items.length === 0 ? (
+                <p className={styles.modalEmpty}>No items — add some below.</p>
+              ) : (
+                <div className={styles.editItemList}>
+                  {items.map((item) => (
+                    <div key={item.id} className={styles.editItemRow}>
+                      <span className={styles.editItemName}>{item.name}</span>
+                      <span className={styles.editItemPrice}>₱{item.price.toFixed(2)}</span>
+                      <div className={styles.qtyControl}>
+                        <button className={styles.qtyBtn} onClick={() => setQty(item.id, item.quantity - 1)}>−</button>
+                        <span className={styles.qtyVal}>{item.quantity}</span>
+                        <button className={styles.qtyBtn} onClick={() => setQty(item.id, item.quantity + 1)}>+</button>
+                      </div>
+                      <span className={styles.editItemTotal}>₱{(item.price * item.quantity).toFixed(2)}</span>
+                      <button className={styles.removeBtn} onClick={() => setQty(item.id, 0)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {addableItems.length > 0 && (
+                <>
+                  <p className={styles.modalSectionLabel} style={{ marginTop: "1rem" }}>Add from menu</p>
+                  <div className={styles.menuGrid}>
+                    {addableItems.map((m) => (
+                      <button key={m.id} className={styles.menuAddBtn} onClick={() => addMenuItem(m)}>
+                        <span className={styles.menuAddName}>{m.name}</span>
+                        <span className={styles.menuAddPrice}>₱{m.price.toFixed(2)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className={styles.modalTotals}>
+                <div className={`${styles.modalTotalRow} ${styles.modalGrandTotal}`}>
+                  <span>Total</span><span>₱{total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Settings tab ── */}
+          {tab === "settings" && (
+            <div className={styles.modalSection}>
+
+              <p className={styles.modalSectionLabel}>Customer name</p>
+              <input
+                className={styles.modalInput}
+                type="text"
+                placeholder="Enter customer name…"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                maxLength={50}
+              />
+
+              <p className={styles.modalSectionLabel} style={{ marginTop: "1.25rem" }}>Payment method</p>
+              <div className={styles.toggleGroup}>
+                {[["Cash", "💵 Cash"], ["Wallet", "📱 Wallet"]].map(([val, label]) => (
+                  <button
+                    key={val}
+                    className={`${styles.toggleBtn} ${paymentMethod === val ? styles.toggleBtnActive : ""}`}
+                    onClick={() => setPaymentMethod(val)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <p className={styles.modalSectionLabel} style={{ marginTop: "1.25rem" }}>Fulfilment status</p>
+              <div className={styles.toggleGroup}>
+                {[["Pending", "⏳ Pending", "amber"], ["Complete", "✓ Complete", "green"]].map(([val, label, color]) => (
+                  <button
+                    key={val}
+                    className={[
+                      styles.toggleBtn,
+                      status === val ? styles.toggleBtnActive : "",
+                      status === val ? styles[`toggleBtnActive_${color}`] : "",
+                    ].join(" ")}
+                    onClick={() => setStatus(val)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <p className={styles.modalSectionLabel} style={{ marginTop: "1.25rem" }}>Payment status</p>
+              <div className={styles.toggleGroup}>
+                {[["Unpaid", "✗ Unpaid", "red"], ["Paid", "💳 Paid", "blue"]].map(([val, label, color]) => (
+                  <button
+                    key={val}
+                    className={[
+                      styles.toggleBtn,
+                      paymentStatus === val ? styles.toggleBtnActive : "",
+                      paymentStatus === val ? styles[`toggleBtnActive_${color}`] : "",
+                    ].join(" ")}
+                    onClick={() => setPaymentStatus(val)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+            </div>
+          )}
+        </div>
+
+        {/* Modal footer */}
+        <div className={styles.modalFooter}>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSave}
+            disabled={saving || items.length === 0}
+          >
+            {saving ? "Saving…" : "Save Changes"}
+          </Button>
+        </div>
+
+      </div>
     </div>
   );
 }
