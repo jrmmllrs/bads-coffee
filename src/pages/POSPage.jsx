@@ -1,6 +1,13 @@
+/**
+ * pages/POSPage.jsx
+ * POS interface — now opens VariantPickerModal for items with variants.
+ * Items without variants go straight into the cart as before.
+ */
+
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { ItemVisual } from "./MenuPage";
+import VariantPickerModal from "./Variantpickermodal";
 import styles from "./POSPage.module.css";
 
 const PAY_METHODS = [
@@ -23,10 +30,32 @@ export default function POSPage() {
   const [customerName, setCustomerName] = useState("");
   const [orderNo]                       = useState(() => String(++orderCounter).padStart(3, "0"));
 
+  // Variant picker state
+  const [variantItem,      setVariantItem]      = useState(null);
+  const [showVariantModal, setShowVariantModal] = useState(false);
+
   const today    = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
   const allCats  = ["All", ...categories.map((c) => c.name)];
   const filtered = selCat === "All" ? menuItems : menuItems.filter((i) => i.category === selCat);
   const itemCount = currentOrder.reduce((s, i) => s + i.quantity, 0);
+
+  /** Called when cashier taps a menu card */
+  const handleMenuCardTap = (item) => {
+    if (!item.available) return;
+    if (item.variants && item.variants.length > 0) {
+      // Has variants → open picker
+      setVariantItem(item);
+      setShowVariantModal(true);
+    } else {
+      // No variants → add directly (plain id used as key)
+      addToOrder({ ...item, variantKey: String(item.id) });
+    }
+  };
+
+  /** Called when variant picker confirms */
+  const handleVariantConfirm = (resolvedItem) => {
+    addToOrder(resolvedItem);
+  };
 
   const handlePlaceOrder = () => {
     completeOrder(payMethod, customerName.trim() || "Guest");
@@ -70,7 +99,7 @@ export default function POSPage() {
                   item={item}
                   cat={cat}
                   inOrder={inOrder}
-                  onAdd={addToOrder}
+                  onAdd={() => handleMenuCardTap(item)}
                 />
               );
             })}
@@ -114,7 +143,11 @@ export default function POSPage() {
           {currentOrder.length === 0
             ? <div className={styles.empty}><span>🛒</span><p>Tap items to add</p></div>
             : currentOrder.map((item) => (
-                <OrderRow key={item.id} item={item} onQtyChange={updateQuantity} />
+                <OrderRow
+                  key={item.variantKey || item.id}
+                  item={item}
+                  onQtyChange={updateQuantity}
+                />
               ))
           }
         </div>
@@ -160,12 +193,23 @@ export default function POSPage() {
       </aside>
 
       {showPanel && <div className={styles.backdrop} onClick={() => setShowPanel(false)} />}
+
+      {/* ── Variant Picker Modal ── */}
+      <VariantPickerModal
+        item={variantItem}
+        isOpen={showVariantModal}
+        onClose={() => { setShowVariantModal(false); setVariantItem(null); }}
+        onConfirm={handleVariantConfirm}
+      />
     </div>
   );
 }
 
+/* ── Menu card ── */
 function MenuCard({ item, cat, inOrder, onAdd }) {
   const [pressed, setPressed] = useState(false);
+  const hasVariants = item.variants && item.variants.length > 0;
+
   return (
     <button
       className={[
@@ -188,25 +232,35 @@ function MenuCard({ item, cat, inOrder, onAdd }) {
       <div className={styles.cardBody}>
         <div className={styles.cardName}>{item.name}</div>
         <span className={styles.cardPrice}>₱{item.price.toFixed(2)}</span>
+        {hasVariants && <div className={styles.variantHint}>Tap to customize</div>}
         {!item.available && <div className={styles.unavailable}>Unavailable</div>}
       </div>
     </button>
   );
 }
 
+/* ── Order row ── */
 function OrderRow({ item, onQtyChange }) {
+  const key = item.variantKey || String(item.id);
+
+  // Build a short summary of selected variants
+  const variantLabel = item.variantSummary
+    ? item.variantSummary.map((v) => v.selected.join(", ")).join(" · ")
+    : null;
+
   return (
     <div className={styles.orderRow}>
       <div className={styles.rowInfo}>
         <div className={styles.rowName}>{item.name}</div>
+        {variantLabel && <div className={styles.rowVariants}>{variantLabel}</div>}
         <div className={styles.rowPrice}>₱{(item.price * item.quantity).toFixed(2)}</div>
       </div>
       <div className={styles.qty}>
-        <button className={styles.qtyBtn} onClick={() => onQtyChange(item.id, item.quantity - 1)}>−</button>
+        <button className={styles.qtyBtn} onClick={() => onQtyChange(key, item.quantity - 1)}>−</button>
         <span className={styles.qtyVal}>{item.quantity}</span>
-        <button className={styles.qtyBtn} onClick={() => onQtyChange(item.id, item.quantity + 1)}>+</button>
+        <button className={styles.qtyBtn} onClick={() => onQtyChange(key, item.quantity + 1)}>+</button>
       </div>
-      <button className={styles.deleteBtn} onClick={() => onQtyChange(item.id, 0)} title="Remove">🗑</button>
+      <button className={styles.deleteBtn} onClick={() => onQtyChange(key, 0)} title="Remove">🗑</button>
     </div>
   );
 }

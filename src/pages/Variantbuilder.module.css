@@ -1,0 +1,271 @@
+/* components/ui/VariantBuilder.module.css */
+
+.root {
+  display:        flex;
+  flex-direction: column;
+  gap:            10px;
+  background:     #f9fafb;
+  border:         1px solid #e8eaed;
+  border-radius:  12px;
+  padding:        16px;
+}
+
+/* ── Section header ── */
+.sectionHeader {
+  display:     flex;
+  align-items: baseline;
+  gap:         10px;
+  margin-bottom: 4px;
+}
+
+.sectionTitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   13px;
+  font-weight: 700;
+  color:       #111827;
+}
+
+.sectionHint {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   12px;
+  color:       #9ca3af;
+}
+
+.empty {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   12px;
+  color:       #c4c9d4;
+  text-align:  center;
+  padding:     10px 0;
+}
+
+/* ── Variant group card ── */
+.group {
+  background:    #fff;
+  border:        1px solid #e8eaed;
+  border-radius: 10px;
+  overflow:      hidden;
+}
+
+.groupHeader {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  padding:     10px 12px;
+  background:  #f4f6f9;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.collapseBtn {
+  background:  none;
+  border:      none;
+  cursor:      pointer;
+  color:       #9ca3af;
+  font-size:   10px;
+  padding:     2px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.collapseBtn:hover { color: #374151; }
+
+.groupNameInput {
+  flex:          1;
+  border:        none;
+  background:    transparent;
+  font-family:   'DM Sans', sans-serif;
+  font-size:     13px;
+  font-weight:   600;
+  color:         #111827;
+  outline:       none;
+  padding:       0;
+}
+.groupNameInput::placeholder { color: #c4c9d4; font-weight: 400; }
+
+.removeGroupBtn {
+  background:    none;
+  border:        none;
+  cursor:        pointer;
+  color:         #d1d5db;
+  font-size:     12px;
+  padding:       2px 4px;
+  border-radius: 4px;
+  flex-shrink:   0;
+  transition:    color 0.15s, background 0.15s;
+}
+.removeGroupBtn:hover { color: #ef4444; background: #fef2f2; }
+
+/* ── Group body ── */
+.groupBody {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap:     10px;
+}
+
+.groupSettings {
+  display:  flex;
+  gap:      12px;
+  flex-wrap: wrap;
+}
+
+.settingRow {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  cursor:      pointer;
+}
+
+.settingLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   12px;
+  font-weight: 600;
+  color:       #6b7280;
+  white-space: nowrap;
+}
+
+.settingSelect {
+  font-family:   'DM Sans', sans-serif;
+  font-size:     12px;
+  font-weight:   500;
+  color:         #374151;
+  border:        1px solid #e0e3e8;
+  border-radius: 6px;
+  padding:       4px 8px;
+  background:    #fff;
+  cursor:        pointer;
+  outline:       none;
+}
+.settingSelect:focus { border-color: #e8521a; }
+
+.settingCheck {
+  accent-color: #e8521a;
+  width:        15px;
+  height:       15px;
+  cursor:       pointer;
+}
+
+.settingNumber {
+  width:         52px;
+  font-family:   'DM Mono', monospace;
+  font-size:     12px;
+  font-weight:   600;
+  color:         #374151;
+  border:        1px solid #e0e3e8;
+  border-radius: 6px;
+  padding:       4px 6px;
+  text-align:    center;
+  outline:       none;
+}
+.settingNumber:focus { border-color: #e8521a; }
+
+/* ── Options list ── */
+.optionsList {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+}
+
+.noOptions {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   12px;
+  color:       #c4c9d4;
+  text-align:  center;
+  padding:     6px 0;
+}
+
+.optionRow {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  background:  #f9fafb;
+  border:      1px solid #e8eaed;
+  border-radius: 8px;
+  padding:     7px 10px;
+}
+
+.optionNameInput {
+  flex:        1;
+  border:      none;
+  background:  transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size:   13px;
+  font-weight: 500;
+  color:       #374151;
+  outline:     none;
+  min-width:   0;
+}
+.optionNameInput::placeholder { color: #c4c9d4; }
+
+.optionPriceWrap {
+  display:     flex;
+  align-items: center;
+  gap:         2px;
+  flex-shrink: 0;
+}
+
+.optionPricePrefix {
+  font-family: 'DM Mono', monospace;
+  font-size:   12px;
+  font-weight: 600;
+  color:       #e8521a;
+}
+
+.optionPriceInput {
+  width:       64px;
+  border:      1px solid #e0e3e8;
+  border-radius: 6px;
+  padding:     4px 6px;
+  font-family: 'DM Mono', monospace;
+  font-size:   12px;
+  font-weight: 600;
+  color:       #374151;
+  text-align:  right;
+  outline:     none;
+  background:  #fff;
+}
+.optionPriceInput:focus { border-color: #e8521a; }
+
+.removeOptBtn {
+  background:    none;
+  border:        none;
+  cursor:        pointer;
+  color:         #d1d5db;
+  font-size:     11px;
+  padding:       2px 4px;
+  border-radius: 4px;
+  flex-shrink:   0;
+  transition:    color 0.15s, background 0.15s;
+}
+.removeOptBtn:hover { color: #ef4444; background: #fef2f2; }
+
+/* ── Add buttons ── */
+.addOptionBtn {
+  align-self:    flex-start;
+  background:    none;
+  border:        1px dashed #c9cdd4;
+  border-radius: 7px;
+  padding:       5px 12px;
+  font-family:   'DM Sans', sans-serif;
+  font-size:     12px;
+  font-weight:   600;
+  color:         #6b7280;
+  cursor:        pointer;
+  transition:    border-color 0.15s, color 0.15s;
+}
+.addOptionBtn:hover { border-color: #e8521a; color: #e8521a; }
+
+.addGroupBtn {
+  align-self:    flex-start;
+  background:    none;
+  border:        1.5px dashed #c9cdd4;
+  border-radius: 8px;
+  padding:       7px 16px;
+  font-family:   'DM Sans', sans-serif;
+  font-size:     13px;
+  font-weight:   600;
+  color:         #6b7280;
+  cursor:        pointer;
+  transition:    border-color 0.15s, color 0.15s, background 0.15s;
+  margin-top:    2px;
+}
+.addGroupBtn:hover { border-color: #e8521a; color: #e8521a; background: #fff1ee; }

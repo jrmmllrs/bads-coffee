@@ -1,0 +1,238 @@
+/* components/ui/VariantPickerModal.module.css */
+
+.body {
+  display:        flex;
+  flex-direction: column;
+  gap:            18px;
+  max-height:     70vh;
+  overflow-y:     auto;
+  padding-right:  2px;
+}
+
+/* ── Item price header ── */
+.itemHeader {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  padding:     10px 14px;
+  background:  #f9fafb;
+  border:      1px solid #e8eaed;
+  border-radius: 10px;
+}
+
+.basePrice {
+  font-family: 'DM Mono', monospace;
+  font-size:   14px;
+  font-weight: 700;
+  color:       #374151;
+}
+
+.extraBadge {
+  background:    #fff1ee;
+  color:         #e8521a;
+  font-family:   'DM Mono', monospace;
+  font-size:     12px;
+  font-weight:   700;
+  padding:       3px 10px;
+  border-radius: 20px;
+  border:        1px solid #f4c4b0;
+}
+
+/* ── Variant group ── */
+.group {
+  display:        flex;
+  flex-direction: column;
+  gap:            10px;
+}
+
+.groupHeader {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             8px;
+}
+
+.groupName {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   14px;
+  font-weight: 700;
+  color:       #111827;
+}
+
+.groupMeta {
+  display: flex;
+  gap:     6px;
+}
+
+.requiredBadge {
+  background:    #fef3c7;
+  color:         #92400e;
+  font-family:   'DM Sans', sans-serif;
+  font-size:     10px;
+  font-weight:   700;
+  padding:       2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.maxBadge {
+  background:    #eff6ff;
+  color:         #1d4ed8;
+  font-family:   'DM Sans', sans-serif;
+  font-size:     10px;
+  font-weight:   700;
+  padding:       2px 8px;
+  border-radius: 10px;
+}
+
+/* ── Options list ── */
+.options {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+}
+
+.option {
+  display:         flex;
+  align-items:     center;
+  gap:             10px;
+  padding:         10px 14px;
+  border:          1.5px solid #e8eaed;
+  border-radius:   10px;
+  background:      #fff;
+  cursor:          pointer;
+  font-family:     'DM Sans', sans-serif;
+  text-align:      left;
+  transition:      border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  width:           100%;
+}
+
+.option:hover {
+  border-color: #f4c4b0;
+  background:   #fffaf9;
+}
+
+.optionSelected {
+  border-color: #e8521a !important;
+  background:   #fff1ee !important;
+  box-shadow:   0 0 0 3px rgba(232,82,26,0.08);
+}
+
+.optionCheck {
+  font-size:  16px;
+  color:      #d1d5db;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.optionSelected .optionCheck {
+  color: #e8521a;
+}
+
+.optionName {
+  flex:        1;
+  font-size:   13px;
+  font-weight: 500;
+  color:       #374151;
+}
+
+.optionSelected .optionName {
+  color:       #111827;
+  font-weight: 600;
+}
+
+.optionPrice {
+  font-family: 'DM Mono', monospace;
+  font-size:   12px;
+  font-weight: 700;
+  color:       #e8521a;
+  flex-shrink: 0;
+}
+
+/* ── Quantity row ── */
+.qtyRow {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         12px 14px;
+  background:      #f9fafb;
+  border:          1px solid #e8eaed;
+  border-radius:   10px;
+}
+
+.qtyLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   13px;
+  font-weight: 700;
+  color:       #374151;
+}
+
+.qtyControl {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+}
+
+.qtyBtn {
+  width:           32px;
+  height:          32px;
+  border-radius:   50%;
+  border:          none;
+  background:      #e8521a;
+  color:           #fff;
+  font-size:       18px;
+  font-weight:     700;
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  line-height:     1;
+  transition:      background 0.15s, transform 0.1s;
+  padding:         0;
+}
+.qtyBtn:hover { background: #d14415; transform: scale(1.08); }
+
+.qtyVal {
+  font-family: 'DM Mono', monospace;
+  font-size:   16px;
+  font-weight: 700;
+  color:       #111827;
+  min-width:   24px;
+  text-align:  center;
+}
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid #e8eaed;
+  padding-top: 16px;
+  display:     flex;
+  flex-direction: column;
+  gap:         12px;
+}
+
+.totalRow {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+}
+
+.totalLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size:   15px;
+  font-weight: 700;
+  color:       #111827;
+}
+
+.totalValue {
+  font-family: 'DM Mono', monospace;
+  font-size:   20px;
+  font-weight: 800;
+  color:       #e8521a;
+}
+
+.actions {
+  display:         flex;
+  gap:             10px;
+  justify-content: flex-end;
+}

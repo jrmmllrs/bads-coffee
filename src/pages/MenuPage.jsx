@@ -1,6 +1,6 @@
 /**
  * pages/MenuPage.jsx
- * Full CRUD for menu items — with optional image upload alongside emoji.
+ * Full CRUD for menu items — with image upload, emoji, and variant builder.
  */
 
 import { useState } from "react";
@@ -10,13 +10,24 @@ import Modal from "../components/ui/Modal";
 import { Input, Select } from "../components/ui/Input";
 import { EmptyState, ConfirmDialog } from "../components/ui/index.jsx";
 import ImageUpload from "../components/ui/Imageupload.jsx";
+import VariantBuilder from "./Variantbuilder.jsx";
 import { CatVisual } from "./CategoriesPage";
 import styles from "./MenuPage.module.css";
 
-const EMPTY_FORM = { name: "", category: "Coffee", price: "", available: true, image: null };
+const EMPTY_FORM = {
+  name:      "",
+  category:  "Coffee",
+  price:     "",
+  available: true,
+  image:     null,
+  variants:  [],   // array of variant groups
+};
 
 export default function MenuPage() {
-  const { menuItems, categories, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability } = useApp();
+  const {
+    menuItems, categories,
+    addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
+  } = useApp();
 
   const [editItem,     setEditItem]     = useState(null);
   const [form,         setForm]         = useState(EMPTY_FORM);
@@ -32,8 +43,16 @@ export default function MenuPage() {
     return matchCat && matchSearch;
   });
 
-  const openAdd  = () => { setEditItem(null); setForm(EMPTY_FORM); setShowModal(true); };
-  const openEdit = (item) => { setEditItem(item); setForm({ ...item, image: item.image || null }); setShowModal(true); };
+  const openAdd  = () => {
+    setEditItem(null);
+    setForm(EMPTY_FORM);
+    setShowModal(true);
+  };
+  const openEdit = (item) => {
+    setEditItem(item);
+    setForm({ ...item, image: item.image || null, variants: item.variants || [] });
+    setShowModal(true);
+  };
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.price) return;
@@ -104,6 +123,7 @@ export default function MenuPage() {
       >
         <div className={styles.formBody}>
 
+          {/* Image upload */}
           <div className={styles.imageSection}>
             <div className={styles.imageUploadWrap}>
               <ImageUpload
@@ -130,7 +150,7 @@ export default function MenuPage() {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <Input
-            label="Price (₱)"
+            label="Base Price (₱)"
             type="number"
             step="0.01"
             min="0"
@@ -147,6 +167,12 @@ export default function MenuPage() {
               <option key={c.id} value={c.name}>{c.icon} {c.name}</option>
             ))}
           </Select>
+
+          {/* Variant Builder */}
+          <VariantBuilder
+            variants={form.variants}
+            onChange={(variants) => setForm({ ...form, variants })}
+          />
 
           <label className={styles.checkRow}>
             <input
@@ -182,6 +208,7 @@ export default function MenuPage() {
 
 /* ── Item card ── */
 function ItemCard({ item, cat, onEdit, onToggle, onDelete }) {
+  const hasVariants = item.variants && item.variants.length > 0;
   return (
     <div className={`${styles.card} ${!item.available ? styles.cardInactive : ""}`}>
       <div className={styles.cardTop}>
@@ -189,6 +216,11 @@ function ItemCard({ item, cat, onEdit, onToggle, onDelete }) {
         <div className={styles.cardInfo}>
           <span className={styles.cardName}>{item.name}</span>
           <span className={styles.cardCategory}>{item.category}</span>
+          {hasVariants && (
+            <span className={styles.variantBadge}>
+              {item.variants.length} variant group{item.variants.length > 1 ? "s" : ""}
+            </span>
+          )}
         </div>
         <span className={styles.cardPrice}>₱{item.price.toFixed(2)}</span>
       </div>
@@ -211,11 +243,12 @@ export function ItemVisual({ item, cat, size = 40 }) {
         src={item.image}
         alt={item.name}
         style={{
-          width: size, height: size,
+          width:      size,
+          height:     size,
           borderRadius: "var(--radius-sm)",
-          objectFit: "cover",
+          objectFit:  "cover",
           flexShrink: 0,
-          display: "block",
+          display:    "block",
         }}
       />
     );

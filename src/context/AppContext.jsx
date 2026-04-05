@@ -1,15 +1,22 @@
+/**
+ * context/AppContext.jsx
+ * Full app state — now variant-aware in cart logic.
+ * Items with variants use `variantKey` to allow the same base item
+ * to appear multiple times in the cart with different options.
+ */
+
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { initDatabase, dbGetAll, dbAdd, dbPut, dbDelete, dbClear } from "../utils/db";
 
 const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
-  const [ready,         setReady]         = useState(false);
-  const [menuItems,     setMenuItems]     = useState([]);
-  const [orders,        setOrders]        = useState([]);
-  const [categories,    setCategories]    = useState([]);
-  const [currentOrder,  setCurrentOrder]  = useState([]);
-  const [toast,         setToast]         = useState(null);
+  const [ready,        setReady]        = useState(false);
+  const [menuItems,    setMenuItems]    = useState([]);
+  const [orders,       setOrders]       = useState([]);
+  const [categories,   setCategories]   = useState([]);
+  const [currentOrder, setCurrentOrder] = useState([]);
+  const [toast,        setToast]        = useState(null);
 
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
@@ -70,17 +77,45 @@ export const AppProvider = ({ children }) => {
   };
 
   // ── Order cart state ──
+  /**
+   * addToOrder:
+   * - If the item has NO variants → simple quantity increment (original behaviour).
+   * - If the item HAS variants → caller must pass a fully-resolved item
+   *   (price already includes modifiers, variantKey set, variantSummary attached).
+   *   Items with the SAME variantKey are merged; different variants are separate rows.
+   */
   const addToOrder = (item) => {
     setCurrentOrder((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
-      if (existing) return prev.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-      return [...prev, { ...item, quantity: 1 }];
+      // Use variantKey when present, otherwise fall back to plain id
+      const matchKey = item.variantKey || String(item.id);
+
+      const existing = prev.find((i) => (i.variantKey || String(i.id)) === matchKey);
+
+      if (existing) {
+        return prev.map((i) =>
+          (i.variantKey || String(i.id)) === matchKey
+            ? { ...i, quantity: i.quantity + (item.quantity || 1) }
+            : i
+        );
+      }
+      return [...prev, { ...item, quantity: item.quantity || 1 }];
     });
   };
-  const updateQuantity = (itemId, qty) => {
-    if (qty <= 0) setCurrentOrder((prev) => prev.filter((i) => i.id !== itemId));
-    else setCurrentOrder((prev) => prev.map((i) => i.id === itemId ? { ...i, quantity: qty } : i));
+
+  const updateQuantity = (variantKey, qty) => {
+    if (qty <= 0) {
+      setCurrentOrder((prev) =>
+        prev.filter((i) => (i.variantKey || String(i.id)) !== variantKey)
+      );
+    } else {
+      setCurrentOrder((prev) =>
+        prev.map((i) =>
+          (i.variantKey || String(i.id)) === variantKey ? { ...i, quantity: qty } : i
+        )
+      );
+    }
   };
+
   const clearCurrentOrder = () => setCurrentOrder([]);
 
   const subtotal = currentOrder.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -89,14 +124,14 @@ export const AppProvider = ({ children }) => {
   const completeOrder = async (paymentMethod, customerName = "Guest") => {
     if (!currentOrder.length) return;
     const order = {
-      id: Date.now(),
-      items: [...currentOrder],
+      id:            Date.now(),
+      items:         [...currentOrder],
       subtotal,
       total,
-      timestamp: new Date().toISOString(),
+      timestamp:     new Date().toISOString(),
       paymentMethod,
       customerName,
-      status: "Pending",
+      status:        "Pending",
       paymentStatus: "Unpaid",
     };
     await dbAdd("orders", order);
@@ -110,7 +145,7 @@ export const AppProvider = ({ children }) => {
   const updateOrder = async (updatedOrder) => {
     const items    = updatedOrder.items.filter((i) => i.quantity > 0);
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const total    = subtotal; // no tax
+    const total    = subtotal;
     const saved    = { ...updatedOrder, items, subtotal, total };
     await dbPut("orders", saved);
     await refresh();
