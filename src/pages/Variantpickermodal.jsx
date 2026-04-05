@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
-import styles from "./VariantPickerModal.module.css";
+import styles from "./Variantpickermodal.module.css";
 
 export default function VariantPickerModal({ item, isOpen, onClose, onConfirm }) {
   const [selections, setSelections] = useState({});
