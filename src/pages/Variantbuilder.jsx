@@ -8,7 +8,7 @@
 import { useState } from "react";
 import Button from "../components/ui/Button";
 import { Input, Select } from "../components/ui/Input";
-import styles from "./VariantBuilder.module.css";
+import styles from "./Variantbuilder.modules.css";
 
 const newGroup = () => ({
   id:        `grp_${Date.now()}`,
