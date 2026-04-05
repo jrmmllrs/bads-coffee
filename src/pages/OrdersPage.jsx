@@ -41,10 +41,10 @@ export default function OrdersPage() {
     return matchPay && matchDate && matchStatus && matchPayment;
   });
 
-  const totalRevenue  = filtered.reduce((s, o) => s + o.total, 0);
-  const avgOrder      = filtered.length ? totalRevenue / filtered.length : 0;
-  const pendingCount  = orders.filter((o) => (o.status ?? "Pending") === "Pending").length;
-  const unpaidCount   = orders.filter((o) => (o.paymentStatus ?? "Unpaid") === "Unpaid").length;
+  const totalRevenue = filtered.reduce((s, o) => s + o.total, 0);
+  const avgOrder     = filtered.length ? totalRevenue / filtered.length : 0;
+  const pendingCount = orders.filter((o) => (o.status ?? "Pending") === "Pending").length;
+  const unpaidCount  = orders.filter((o) => (o.paymentStatus ?? "Unpaid") === "Unpaid").length;
 
   const exportJSON = () => {
     const a = document.createElement("a");
@@ -94,7 +94,6 @@ export default function OrdersPage() {
       {/* ── Filters ── */}
       <div className={styles.filterBar}>
         <span className={styles.filterBarLabel}>Filter</span>
-
         <SegmentedControl options={DATE_FILTERS}           value={dateFilter}    onChange={setDateFilter}    />
         <div className={styles.filterDivider} />
         <SegmentedControl options={PAY_FILTERS}            value={payFilter}     onChange={setPayFilter}     />
@@ -190,14 +189,13 @@ export default function OrdersPage() {
   );
 }
 
-/* ─── SegmentedControl ───────────────────────────────────────── */
-
+/* ─── SegmentedControl ─────────────────────────────────────── */
 function SegmentedControl({ options, value, onChange, colorMap = {} }) {
   return (
     <div className={styles.seg}>
       {options.map(([val, label]) => {
         const isActive = value === val;
-        const color = colorMap[val];
+        const color    = colorMap[val];
         return (
           <button
             key={val}
@@ -216,30 +214,25 @@ function SegmentedControl({ options, value, onChange, colorMap = {} }) {
   );
 }
 
-/* ─── helpers ───────────────────────────────────────────────── */
-
+/* ─── helpers ──────────────────────────────────────────────── */
 function payMeta(method) {
   if (method === "Cash")   return { icon: "💵", bg: "#dcfce7", badge: "cash"   };
   if (method === "Wallet") return { icon: "📱", bg: "#fef3c7", badge: "wallet" };
   return                          { icon: "💳", bg: "#dbeafe", badge: "card"   };
 }
 
-/* ─── OrderCard ─────────────────────────────────────────────── */
-
+/* ─── OrderCard ────────────────────────────────────────────── */
 function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete, onMarkPaid, onEdit }) {
   const { icon, bg, badge } = payMeta(order.paymentMethod);
   const itemCount     = order.items.reduce((s, i) => s + i.quantity, 0);
-  const status        = order.status ?? "Pending";
+  const status        = order.status        ?? "Pending";
   const paymentStatus = order.paymentStatus ?? "Unpaid";
   const isPending     = status === "Pending";
   const isUnpaid      = paymentStatus === "Unpaid";
-  const customerName  = order.customerName ?? "Guest";
+  const customerName  = order.customerName  ?? "Guest";
 
   return (
-    <div className={[
-      styles.card,
-      isPending ? styles.cardPending : styles.cardComplete,
-    ].join(" ")}>
+    <div className={[styles.card, isPending ? styles.cardPending : styles.cardComplete].join(" ")}>
 
       <div className={`${styles.statusStripe} ${isPending ? styles.stripePending : styles.stripeComplete}`} />
 
@@ -284,13 +277,39 @@ function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete, onMa
           <div className={styles.detailInner}>
 
             <div className={styles.itemList}>
-              {order.items.map((item, i) => (
-                <div key={i} className={styles.itemRow}>
-                  <span className={styles.itemName}>{item.name}</span>
-                  <span className={styles.itemQty}>×{item.quantity}</span>
-                  <span className={styles.itemTotal}>₱{(item.price * item.quantity).toFixed(2)}</span>
-                </div>
-              ))}
+              {order.items.map((item, i) => {
+                // Build variant label from variantSummary if present
+                const variantLabel = item.variantSummary && item.variantSummary.length > 0
+                  ? item.variantSummary.map((v) => `${v.groupName}: ${v.selected.join(", ")}`).join(" · ")
+                  : null;
+
+                // Show base price + modifier breakdown if variant changed the price
+                const hasVariantPrice = item.basePrice != null && item.basePrice !== item.price;
+
+                return (
+                  <div key={i} className={styles.itemBlock}>
+                    {/* Main item row */}
+                    <div className={styles.itemRow}>
+                      <span className={styles.itemName}>{item.name}</span>
+                      <span className={styles.itemQty}>×{item.quantity}</span>
+                      <span className={styles.itemTotal}>₱{(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+
+                    {/* Variant summary row */}
+                    {variantLabel && (
+                      <div className={styles.itemVariantRow}>
+                        <span className={styles.itemVariantLabel}>{variantLabel}</span>
+                        {hasVariantPrice && (
+                          <span className={styles.itemVariantPrice}>
+                            ₱{item.basePrice.toFixed(2)} base
+                            {" "}+₱{(item.price - item.basePrice).toFixed(2)} extras
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className={styles.subtotals}>
@@ -311,7 +330,7 @@ function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete, onMa
                 )}
               </div>
               <div className={styles.detailActionsRight}>
-                <Button variant="ghost" size="sm" onClick={onEdit}>✏️ Edit</Button>
+                <Button variant="ghost"  size="sm" onClick={onEdit}>✏️ Edit</Button>
                 <Button variant="danger" size="sm" onClick={onDelete}>Delete</Button>
               </div>
             </div>
@@ -323,30 +342,39 @@ function OrderCard({ order, isExpanded, onToggle, onDelete, onMarkComplete, onMa
   );
 }
 
-/* ─── EditOrderModal ─────────────────────────────────────────── */
-
+/* ─── EditOrderModal ───────────────────────────────────────── */
 function EditOrderModal({ order, menuItems, onClose, onSave }) {
   const [items,         setItems]         = useState(order.items.map((i) => ({ ...i })));
-  const [customerName,  setCustomerName]  = useState(order.customerName ?? "Guest");
+  const [customerName,  setCustomerName]  = useState(order.customerName  ?? "Guest");
   const [paymentMethod, setPaymentMethod] = useState(order.paymentMethod);
-  const [status,        setStatus]        = useState(order.status ?? "Pending");
+  const [status,        setStatus]        = useState(order.status        ?? "Pending");
   const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus ?? "Unpaid");
   const [saving,        setSaving]        = useState(false);
   const [tab,           setTab]           = useState("items");
 
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const total    = subtotal; // no tax
+  const total    = subtotal;
 
-  const setQty = (id, qty) => {
-    if (qty <= 0) setItems((prev) => prev.filter((i) => i.id !== id));
-    else setItems((prev) => prev.map((i) => i.id === id ? { ...i, quantity: qty } : i));
+  const setQty = (variantKey, qty) => {
+    if (qty <= 0) {
+      setItems((prev) => prev.filter((i) => (i.variantKey || String(i.id)) !== variantKey));
+    } else {
+      setItems((prev) =>
+        prev.map((i) => (i.variantKey || String(i.id)) === variantKey ? { ...i, quantity: qty } : i)
+      );
+    }
   };
 
   const addMenuItem = (menuItem) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === menuItem.id);
-      if (existing) return prev.map((i) => i.id === menuItem.id ? { ...i, quantity: i.quantity + 1 } : i);
-      return [...prev, { ...menuItem, quantity: 1 }];
+      const key      = String(menuItem.id);
+      const existing = prev.find((i) => (i.variantKey || String(i.id)) === key);
+      if (existing) {
+        return prev.map((i) =>
+          (i.variantKey || String(i.id)) === key ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [...prev, { ...menuItem, quantity: 1, variantKey: key }];
     });
   };
 
@@ -357,6 +385,7 @@ function EditOrderModal({ order, menuItems, onClose, onSave }) {
     setSaving(false);
   };
 
+  // Only show menu items not already in the order (by base id, ignoring variants)
   const addableItems = menuItems.filter(
     (m) => m.available && !items.find((i) => i.id === m.id)
   );
@@ -399,19 +428,31 @@ function EditOrderModal({ order, menuItems, onClose, onSave }) {
                 <p className={styles.modalEmpty}>No items — add some below.</p>
               ) : (
                 <div className={styles.editItemList}>
-                  {items.map((item) => (
-                    <div key={item.id} className={styles.editItemRow}>
-                      <span className={styles.editItemName}>{item.name}</span>
-                      <span className={styles.editItemPrice}>₱{item.price.toFixed(2)}</span>
-                      <div className={styles.qtyControl}>
-                        <button className={styles.qtyBtn} onClick={() => setQty(item.id, item.quantity - 1)}>−</button>
-                        <span className={styles.qtyVal}>{item.quantity}</span>
-                        <button className={styles.qtyBtn} onClick={() => setQty(item.id, item.quantity + 1)}>+</button>
+                  {items.map((item) => {
+                    const key          = item.variantKey || String(item.id);
+                    const variantLabel = item.variantSummary && item.variantSummary.length > 0
+                      ? item.variantSummary.map((v) => v.selected.join(", ")).join(" · ")
+                      : null;
+
+                    return (
+                      <div key={key} className={styles.editItemRow}>
+                        <div className={styles.editItemInfo}>
+                          <span className={styles.editItemName}>{item.name}</span>
+                          {variantLabel && (
+                            <span className={styles.editItemVariant}>{variantLabel}</span>
+                          )}
+                          <span className={styles.editItemPrice}>₱{item.price.toFixed(2)} each</span>
+                        </div>
+                        <div className={styles.qtyControl}>
+                          <button className={styles.qtyBtn} onClick={() => setQty(key, item.quantity - 1)}>−</button>
+                          <span className={styles.qtyVal}>{item.quantity}</span>
+                          <button className={styles.qtyBtn} onClick={() => setQty(key, item.quantity + 1)}>+</button>
+                        </div>
+                        <span className={styles.editItemTotal}>₱{(item.price * item.quantity).toFixed(2)}</span>
+                        <button className={styles.removeBtn} onClick={() => setQty(key, 0)}>✕</button>
                       </div>
-                      <span className={styles.editItemTotal}>₱{(item.price * item.quantity).toFixed(2)}</span>
-                      <button className={styles.removeBtn} onClick={() => setQty(item.id, 0)}>✕</button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -466,7 +507,7 @@ function EditOrderModal({ order, menuItems, onClose, onSave }) {
 
               <p className={styles.modalSectionLabel} style={{ marginTop: "1.25rem" }}>Fulfilment status</p>
               <div className={styles.toggleGroup}>
-                {[["Pending", "⏳ Pending", "amber"], ["Complete", "✓ Complete", "green"]].map(([val, label, color]) => (
+                {[["Pending","⏳ Pending","amber"],["Complete","✓ Complete","green"]].map(([val, label, color]) => (
                   <button
                     key={val}
                     className={[
@@ -483,7 +524,7 @@ function EditOrderModal({ order, menuItems, onClose, onSave }) {
 
               <p className={styles.modalSectionLabel} style={{ marginTop: "1.25rem" }}>Payment status</p>
               <div className={styles.toggleGroup}>
-                {[["Unpaid", "✗ Unpaid", "red"], ["Paid", "💳 Paid", "blue"]].map(([val, label, color]) => (
+                {[["Unpaid","✗ Unpaid","red"],["Paid","💳 Paid","blue"]].map(([val, label, color]) => (
                   <button
                     key={val}
                     className={[
