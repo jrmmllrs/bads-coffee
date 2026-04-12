@@ -1,8 +1,6 @@
 /**
  * context/AppContext.jsx
- * Full app state — now variant-aware in cart logic.
- * Items with variants use `variantKey` to allow the same base item
- * to appear multiple times in the cart with different options.
+ * Full app state — variant-aware cart + expenses tracking.
  */
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
@@ -15,6 +13,7 @@ export const AppProvider = ({ children }) => {
   const [menuItems,    setMenuItems]    = useState([]);
   const [orders,       setOrders]       = useState([]);
   const [categories,   setCategories]   = useState([]);
+  const [expenses,     setExpenses]     = useState([]);
   const [currentOrder, setCurrentOrder] = useState([]);
   const [toast,        setToast]        = useState(null);
 
@@ -24,12 +23,16 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [menu, ords, cats] = await Promise.all([
-      dbGetAll("menu"), dbGetAll("orders"), dbGetAll("categories"),
+    const [menu, ords, cats, exps] = await Promise.all([
+      dbGetAll("menu"),
+      dbGetAll("orders"),
+      dbGetAll("categories"),
+      dbGetAll("expenses"),
     ]);
     setMenuItems(menu.sort((a, b) => a.id - b.id));
     setOrders(ords.sort((a, b) => b.id - a.id));
     setCategories(cats);
+    setExpenses(exps.sort((a, b) => b.id - a.id));
   }, []);
 
   useEffect(() => {
@@ -76,21 +79,51 @@ export const AppProvider = ({ children }) => {
     showToast(`"${name}" deleted`, "error");
   };
 
-  // ── Order cart state ──
+  // ── Expenses CRUD ──
   /**
-   * addToOrder:
-   * - If the item has NO variants → simple quantity increment (original behaviour).
-   * - If the item HAS variants → caller must pass a fully-resolved item
-   *   (price already includes modifiers, variantKey set, variantSummary attached).
-   *   Items with the SAME variantKey are merged; different variants are separate rows.
+   * Expense shape:
+   * {
+   *   id: number (Date.now()),
+   *   name: string,
+   *   amount: number,
+   *   category: string,   // "Ingredients" | "Utilities" | "Staff" | "Equipment" | "Other"
+   *   date: string,       // ISO date string
+   *   notes?: string,
+   * }
    */
+  const addExpense = async (expense) => {
+    const record = { ...expense, id: Date.now(), date: expense.date || new Date().toISOString() };
+    await dbAdd("expenses", record);
+    await refresh();
+    showToast(`Expense "${expense.name}" added`);
+  };
+
+  const updateExpense = async (expense) => {
+    await dbPut("expenses", expense);
+    await refresh();
+    showToast(`Expense "${expense.name}" updated`);
+  };
+
+  const deleteExpense = async (id, name) => {
+    await dbDelete("expenses", id);
+    await refresh();
+    showToast(`"${name}" deleted`, "error");
+  };
+
+  const clearAllExpenses = async () => {
+    await dbClear("expenses");
+    await refresh();
+    showToast("All expenses cleared", "error");
+  };
+
+  // ── Derived expense totals ──
+  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+  // ── Order cart state ──
   const addToOrder = (item) => {
     setCurrentOrder((prev) => {
-      // Use variantKey when present, otherwise fall back to plain id
       const matchKey = item.variantKey || String(item.id);
-
       const existing = prev.find((i) => (i.variantKey || String(i.id)) === matchKey);
-
       if (existing) {
         return prev.map((i) =>
           (i.variantKey || String(i.id)) === matchKey
@@ -119,7 +152,7 @@ export const AppProvider = ({ children }) => {
   const clearCurrentOrder = () => setCurrentOrder([]);
 
   const subtotal = currentOrder.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const total    = subtotal; // no tax
+  const total    = subtotal;
 
   const completeOrder = async (paymentMethod, customerName = "Guest") => {
     if (!currentOrder.length) return;
@@ -141,7 +174,6 @@ export const AppProvider = ({ children }) => {
     return order;
   };
 
-  // ── Update entire order (edit) ──
   const updateOrder = async (updatedOrder) => {
     const items    = updatedOrder.items.filter((i) => i.quantity > 0);
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -153,7 +185,6 @@ export const AppProvider = ({ children }) => {
     return saved;
   };
 
-  // ── Flip fulfillment status ──
   const updateOrderStatus = async (id, newStatus) => {
     const order = orders.find((o) => o.id === id);
     if (!order) return;
@@ -165,7 +196,6 @@ export const AppProvider = ({ children }) => {
     );
   };
 
-  // ── Flip payment status ──
   const updatePaymentStatus = async (id, newPaymentStatus) => {
     const order = orders.find((o) => o.id === id);
     if (!order) return;
@@ -182,18 +212,28 @@ export const AppProvider = ({ children }) => {
     await refresh();
     showToast("Order deleted", "error");
   };
+
   const clearAllOrders = async () => {
     await dbClear("orders");
     await refresh();
     showToast("All orders cleared", "error");
   };
 
+  // ── Derived revenue & profit ──
+  const totalRevenue = orders
+    .filter((o) => o.paymentStatus === "Paid")
+    .reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const netProfit = totalRevenue - totalExpenses;
+
   return (
     <AppContext.Provider value={{
-      ready, menuItems, orders, categories,
+      ready, menuItems, orders, categories, expenses,
       currentOrder, subtotal, total, toast,
+      totalExpenses, totalRevenue, netProfit,
       addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
       addCategory, updateCategory, deleteCategory,
+      addExpense, updateExpense, deleteExpense, clearAllExpenses,
       addToOrder, updateQuantity, clearCurrentOrder, completeOrder,
       deleteOrder, clearAllOrders,
       updateOrder, updateOrderStatus, updatePaymentStatus,

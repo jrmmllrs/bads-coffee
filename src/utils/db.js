@@ -6,10 +6,11 @@
  *   "menu"       → menu items
  *   "orders"     → completed orders
  *   "categories" → item categories
+ *   "expenses"   → expense records        ← NEW
  */
 
 const DB_NAME    = "CoffeeShopPOS";
-const DB_VERSION = 9;   // ← bump this whenever you change seed data
+const DB_VERSION = 10;   // ← was 9, bumped to 10 to register the new store
 
 // ── Seed data ─────────────────────────────────────────────────────────────────
 export const DEFAULT_CATEGORIES = [
@@ -58,6 +59,10 @@ export const openDB = () =>
       if (!db.objectStoreNames.contains("categories")) {
         db.createObjectStore("categories", { keyPath: "id" });
       }
+      // ↓ NEW — safe to add; the guard means existing stores are untouched
+      if (!db.objectStoreNames.contains("expenses")) {
+        db.createObjectStore("expenses", { keyPath: "id" });
+      }
 
       // Re-seed menu + categories every time the version bumps.
       // Orders are intentionally preserved across upgrades.
@@ -70,6 +75,8 @@ export const openDB = () =>
       const catStore = tx.objectStore("categories");
       catStore.clear();
       for (const cat of DEFAULT_CATEGORIES) catStore.put(cat);
+
+      // expenses store is NOT seeded — starts empty, user fills it in.
     };
   });
 
